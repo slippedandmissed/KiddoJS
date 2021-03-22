@@ -37,7 +37,7 @@ export class Box extends Constraint {
         } else {
             this.container = document.createElement("div");
         }
-        this.container.className = "box";
+        this.container.className = "box middleware";
         this.container.classList.add(`b${this.topLeft.x}-${this.topLeft.y}-${this.size.width}-${this.size.height}`);
         this.container.style.gridColumnStart = "" + (this.topLeft.x + 1);
         this.container.style.gridColumnEnd = "" + (this.topLeft.x + this.size.width + 1);

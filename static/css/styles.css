@@ -11,13 +11,13 @@
     user-select: none;
 }
 
-.box {
-    z-index: 3;
+.middleware {
+    z-index: 2;
+    pointer-events: none;
 }
 
 .box {
     border: 2px solid black;
-    pointer-events: none;
 }
 
 
@@ -34,7 +34,7 @@
 .value {
     font-size: 2em;
     pointer-events: none;
-    z-index:4;
+    z-index:3;
 }
 
 .notes {
@@ -63,8 +63,6 @@
 
 .thermometer {
     position: relative;
-    z-index: 2;
-    pointer-events: none;
 }
 
 .thermometer svg {

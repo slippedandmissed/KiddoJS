@@ -64,7 +64,7 @@ export class Thermometer extends Constraint {
         } else {
             this.container = document.createElement("div");
         }
-        this.container.className = "thermometer";
+        this.container.className = "thermometer middleware";
         this.container.classList.add(Thermometer.generateID.bind(this)());
         this.container.style.gridColumnStart = "" + (this.topLeft.x + 1);
         this.container.style.gridColumnEnd = "" + (this.topLeft.x + this.size.width + 1);
