@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "module": "es6",
+        "noImplicitAny": true,
+        "removeComments": true,
+        "outDir": "static/js/"
+    },
+    "include": ["ts/*"]
+}

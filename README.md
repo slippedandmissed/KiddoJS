@@ -1,0 +1,3 @@
+# KiddoJS
+
+A sudoku engine.
