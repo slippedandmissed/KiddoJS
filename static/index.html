@@ -10,12 +10,35 @@
 </head>
 
 <body>
-    <div id="sudoku-wrapper">
+    <main>
+        <div id="sudoku-wrapper">
 
-    </div>
-    <button id="solve-button">Solve</button>
-    <button id="cancel-solve-button" disabled>Cancel solve</button>
-    <div id="solve-log"></div>
+        </div>
+        <div class="controls">
+            <section>
+                <div class="buttons">
+                    <button id="solve-button">Find all solutions</button>
+                    <button id="cancel-solve-button" disabled>Cancel</button>
+                    <button id="show-all-solutions-button" disabled>Put solutions into puzzle</button>
+                </div>
+                <div>
+                    <span>Solution count: </span>
+                    <span id="solution-count"></span>
+                </div>
+            </section>
+            <section>
+                <div class="buttons">
+                    <button id="solve-one-button">Find one solution</button>
+                    <button id="cancel-solve-one-button" disabled>Cancel</button>
+                    <button id="show-one-solution-button" disabled>Put solution into puzzle</button>
+                </div>
+                <div>
+                    <span>Is puzzle broken? </span>
+                    <span id="is-broken"></span>
+                </div>
+            </section>
+        </div>
+    </main>
 </body>
 
 </html>

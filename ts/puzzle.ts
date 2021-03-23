@@ -5,8 +5,9 @@ import { Sudoku } from "./sudoku";
 import { classes, numerals, Position } from "./tools";
 
 export interface Solutions {
-    solutions: string[][][],
-    notes: string[][][]
+    solutions: string[][][];
+    notes: string[][][];
+    cancelled: boolean;
 };
 
 export class Puzzle {
@@ -214,13 +215,13 @@ export class Puzzle {
             this.loadState(this.preSolveState);
             this.pushState();
             this.preSolveState = null;
-            return null;
+            return {solutions: [], notes: null, cancelled: this.solveCancelled};
         }
 
         this.loadState(this.preSolveState);
         this.pushState();
         this.preSolveState = null;
-        return {solutions: allSolutions, notes};
+        return {solutions: allSolutions, notes, cancelled: this.solveCancelled};
     }
 
     private flatten(tempGrid: string[][][]): string[][] {

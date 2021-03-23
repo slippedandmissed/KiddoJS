@@ -1030,12 +1030,12 @@ var Puzzle = (function () {
                             this.loadState(this.preSolveState);
                             this.pushState();
                             this.preSolveState = null;
-                            return [2, null];
+                            return [2, { solutions: [], notes: null, cancelled: this.solveCancelled }];
                         }
                         this.loadState(this.preSolveState);
                         this.pushState();
                         this.preSolveState = null;
-                        return [2, { solutions: allSolutions, notes: notes }];
+                        return [2, { solutions: allSolutions, notes: notes, cancelled: this.solveCancelled }];
                 }
             });
         });
@@ -1243,31 +1243,74 @@ window.onload = function () {
     document.getElementById("sudoku-wrapper").appendChild(puzzle.getSudokuElement());
     var solveButton = document.getElementById("solve-button");
     var cancelSolveButton = document.getElementById("cancel-solve-button");
-    var logElement = document.getElementById("solve-log");
-    cancelSolveButton.onclick = function () {
+    var showAllSolutionsButton = document.getElementById("show-all-solutions-button");
+    var solutionCount = document.getElementById("solution-count");
+    var solutions = null;
+    var solveOneButton = document.getElementById("solve-one-button");
+    var cancelSolveOneButton = document.getElementById("cancel-solve-one-button");
+    var showOneSolutionsButton = document.getElementById("show-one-solution-button");
+    var isBroken = document.getElementById("is-broken");
+    var oneSolution = null;
+    var cancelSolve = function () {
         puzzle.cancelSolve();
     };
-    solveButton.onclick = function () { return main_awaiter(void 0, void 0, void 0, function () {
-        var solutions;
+    cancelSolveButton.onclick = cancelSolve;
+    cancelSolveOneButton.onclick = cancelSolve;
+    var solve = function (all) { return main_awaiter(void 0, void 0, void 0, function () {
+        var mySolutions;
         return main_generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     solveButton.disabled = true;
-                    cancelSolveButton.disabled = false;
-                    logElement.innerHTML = "";
-                    return [4, puzzle.solve(function (x) {
-                        })];
+                    solveOneButton.disabled = true;
+                    cancelSolveButton.disabled = !all;
+                    cancelSolveOneButton.disabled = all;
+                    showAllSolutionsButton.disabled = true;
+                    showOneSolutionsButton.disabled = true;
+                    return [4, puzzle.solve(function () { }, !all)];
                 case 1:
-                    solutions = _a.sent();
+                    mySolutions = _a.sent();
+                    if (all) {
+                        solutions = mySolutions;
+                    }
+                    else {
+                        oneSolution = mySolutions;
+                    }
                     solveButton.disabled = false;
+                    solveOneButton.disabled = false;
                     cancelSolveButton.disabled = true;
-                    if (solutions) {
-                        puzzle.setValuesFromNotes(solutions.notes);
+                    cancelSolveOneButton.disabled = true;
+                    if (all) {
+                        solutionCount.innerText = (mySolutions.cancelled ? "At least " : " ") + mySolutions.solutions.length;
+                        showAllSolutionsButton.disabled = false;
+                    }
+                    console.log(mySolutions);
+                    if (mySolutions.solutions.length > 0) {
+                        isBroken.innerText = "No";
+                    }
+                    else if (mySolutions.cancelled) {
+                        isBroken.innerText = "Unclear";
+                    }
+                    else {
+                        isBroken.innerText = "Yes";
+                    }
+                    if (all) {
+                        showAllSolutionsButton.disabled = mySolutions.solutions.length === 0;
+                    }
+                    else {
+                        showOneSolutionsButton.disabled = mySolutions.solutions.length === 0;
                     }
                     return [2];
             }
         });
     }); };
+    solveButton.onclick = function () { return solve(true); };
+    solveOneButton.onclick = function () { return solve(false); };
+    var loadNotes = function (notes) {
+        puzzle.setValuesFromNotes(notes);
+    };
+    showAllSolutionsButton.onclick = function () { return loadNotes(solutions.notes); };
+    showOneSolutionsButton.onclick = function () { return loadNotes(oneSolution.notes); };
 };
 
 /******/ })()

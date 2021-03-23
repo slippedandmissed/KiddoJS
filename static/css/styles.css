@@ -2,6 +2,45 @@
     font-family: Arial, Helvetica, sans-serif;
 }
 
+main {
+    display: flex;
+}
+
+.controls {
+    margin: 0px 50px;
+}
+
+.controls section {
+    padding: 20px;
+    border: 1px solid black;
+    margin: 20px 0;
+}
+
+.controls section > *:not(:first-child) {
+    margin-top: 30px;
+}
+
+button {
+    background-color: #d4fff6;
+    padding: 10px 30px;
+    margin: 10px;
+    border: 1px solid black;
+    border-radius: 10px;
+    outline: none;
+}
+
+button:hover {
+    background-color: #a3d9cd;   
+}
+
+button:active {
+    background-color: #74a399;
+}
+
+button:disabled {
+    background-color: #6e8580;
+}
+
 .sudoku {
     display: inline-grid;
     outline: 3px solid black;
