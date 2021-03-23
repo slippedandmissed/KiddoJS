@@ -42,13 +42,11 @@ window.onload = () => {
         logElement.innerHTML = "";
         const solutions = await puzzle.solve((x) => {
             // console.log(x);
-        }, true);
+        });
         solveButton.disabled = false;
         cancelSolveButton.disabled = true;
         if (solutions) {
             puzzle.setValuesFromNotes(solutions.notes);
         }
-
-        console.log(await puzzle.isSolveable());
     };
 };

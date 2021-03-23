@@ -163,8 +163,8 @@ export class Puzzle {
         this.solveCancelled = true;
     }
 
-    async isSolveable(log: ((x: string) => any) = (_) => {}): Promise<boolean> {
-        return !!(await this.solve(log, true));
+    async isBroken(log: ((x: string) => any) = (_) => {}): Promise<boolean> {
+        return !(await this.solve(log, true));
     }
 
     async solve(log: ((x: string) => any) = (_) => { }, onlyFirstSolution: boolean = false): Promise<Solutions> {

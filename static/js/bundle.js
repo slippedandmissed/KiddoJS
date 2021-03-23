@@ -964,13 +964,13 @@ var Puzzle = (function () {
     Puzzle.prototype.cancelSolve = function () {
         this.solveCancelled = true;
     };
-    Puzzle.prototype.isSolveable = function (log) {
+    Puzzle.prototype.isBroken = function (log) {
         if (log === void 0) { log = function (_) { }; }
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4, this.solve(log, true)];
-                    case 1: return [2, !!(_a.sent())];
+                    case 1: return [2, !(_a.sent())];
                 }
             });
         });
@@ -1248,26 +1248,22 @@ window.onload = function () {
         puzzle.cancelSolve();
     };
     solveButton.onclick = function () { return main_awaiter(void 0, void 0, void 0, function () {
-        var solutions, _a, _b;
-        return main_generator(this, function (_c) {
-            switch (_c.label) {
+        var solutions;
+        return main_generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
                     solveButton.disabled = true;
                     cancelSolveButton.disabled = false;
                     logElement.innerHTML = "";
                     return [4, puzzle.solve(function (x) {
-                        }, true)];
+                        })];
                 case 1:
-                    solutions = _c.sent();
+                    solutions = _a.sent();
                     solveButton.disabled = false;
                     cancelSolveButton.disabled = true;
                     if (solutions) {
                         puzzle.setValuesFromNotes(solutions.notes);
                     }
-                    _b = (_a = console).log;
-                    return [4, puzzle.isSolveable()];
-                case 2:
-                    _b.apply(_a, [_c.sent()]);
                     return [2];
             }
         });
