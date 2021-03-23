@@ -45,4 +45,25 @@ export class Box extends Constraint {
         this.container.style.gridRowEnd = "" + (this.topLeft.y + this.size.height + 1);
     }
 
+    friendlyName(): string {
+        return `Box (${this.topLeft.x},${this.topLeft.y}) to (${this.topLeft.x+this.size.width},${this.topLeft.y+this.size.height})`;
+    }
+
+    violates(grid: string[][]) {
+        const soFar: string[] = [];
+        for (let y=this.topLeft.y; y<this.topLeft.y+this.size.height; y++) {
+            for (let x=this.topLeft.x; x<this.topLeft.x+this.size.width; x++) {
+                const item = grid[y][x];
+                if (!item) {
+                    continue;
+                }
+                if (soFar.includes(item)) {
+                    return true;
+                }
+                soFar.push(item);
+            }
+        }
+        return false;
+    }
+
 }

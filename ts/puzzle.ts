@@ -1,8 +1,8 @@
 import { Cell } from "./cell";
 import { HistoryStack } from "./historystack";
-import { Serializer } from "./serializer";
+import { Serializer, state } from "./serializer";
 import { Sudoku } from "./sudoku";
-import { classes, numerals } from "./tools";
+import { classes, numerals, Position } from "./tools";
 
 export class Puzzle {
 
@@ -11,7 +11,8 @@ export class Puzzle {
     private alphabet: string[];
     private selected: Cell[] = [];
     private serializer: Serializer;
-    private historyStack: HistoryStack<string>;
+    private historyStack: HistoryStack<state>;
+    private preSolveState: state;
 
     constructor(title: string, sudoku: Sudoku, alphabet: string[] = numerals, serializer: Serializer = null) {
         this.title = title;
@@ -30,12 +31,15 @@ export class Puzzle {
         document.addEventListener("keydown", this.onKeyDown.bind(this));
     }
 
-    private pushState(): void {
-        const state = this.serializer.serialize(this.sudoku);
-        this.historyStack.push(state);
+    private getState(): state {
+        return this.serializer.serialize(this.sudoku);
     }
 
-    private loadState(state: string): void {
+    private pushState(): void {
+        this.historyStack.push(this.getState());
+    }
+
+    private loadState(state: state): void {
         if (state) {
             this.sudoku = this.serializer.deserialize(state);
             this.selected = [];
@@ -51,6 +55,9 @@ export class Puzzle {
     }
 
     private onClick(event: MouseEvent) {
+        if (this.preSolveState) {
+            return;
+        }
         const target = event.target as HTMLElement;
         const oldSelected = [...this.selected];
         if (!event.shiftKey) {
@@ -82,6 +89,9 @@ export class Puzzle {
     private onKeyDown(event: KeyboardEvent) {
         // FIXME
         // Find a way to do this without "event.keyCode" as it is deprecated.
+        if (this.preSolveState) {
+            return;
+        }
         let key = String.fromCharCode(event.keyCode).toUpperCase();
 
         if (event.ctrlKey) {
@@ -143,4 +153,144 @@ export class Puzzle {
         return this.sudoku.getContainer();
     }
 
+    async solve(log: ((x: string) => any) = (_) => {}): Promise<string[][][]> {
+        this.preSolveState = this.getState();
+        log("Starting solve\n");
+        const tempGrid: string[][][] = [];
+        const sudokuSize = this.sudoku.getSize();
+        for (let y = 0; y < sudokuSize.height; y++) {
+            const row: string[][] = [];
+            tempGrid.push(row);
+            for (let x = 0; x < sudokuSize.width; x++) {
+                const pos = { x, y };
+                const cell = this.sudoku.getCell(pos);
+                const val = cell.getValue();
+                if (val) {
+                    row.push([val]);
+                } else {
+                    const notes = cell.getNotes();
+                    if (notes.length > 0) {
+                        row.push(notes);
+                    } else {
+                        row.push([...this.alphabet]);
+                    }
+                }
+            }
+        }
+
+        for (let y=0; y<sudokuSize.height; y++) {
+            for (let x=0; x<sudokuSize.width; x++) {
+                this.sudoku.getCell({x,y}).clearNotes();
+            }
+        }
+
+        const allSolutions = await this.solveFrom(tempGrid, log);
+        if (allSolutions.length === 0) {
+            log("No solutions...");
+            this.loadState(this.preSolveState);
+            this.preSolveState = null;
+            return null;
+        }
+
+        log(`${allSolutions.length} solutions`);
+        const notes: string[][][] = [];
+        for (let y = 0; y < sudokuSize.height; y++) {
+            const row: string[][] = [];
+            notes.push(row);
+            for (let x = 0; x < sudokuSize.width; x++) {
+                row.push([]);
+            }
+        }
+        for (const solution of allSolutions) {
+            for (let y = 0; y < sudokuSize.height; y++) {
+                for (let x = 0; x < sudokuSize.width; x++) {
+                    const notesList = notes[y][x];
+                    const item = solution[y][x];
+                    if (!notesList.includes(item)) {
+                        notesList.push(item);
+                    }
+                }
+            }
+        }
+        this.loadState(this.preSolveState);
+        this.preSolveState = null;
+        return notes;
+    }
+
+    private flatten(tempGrid: string[][][]): string[][] {
+        const flattened: string[][] = [];
+        for (const row of tempGrid) {
+            const flattenedRow: string[] = [];
+            flattened.push(flattenedRow);
+            for (const options of row) {
+                flattenedRow.push(options.length === 1 ? options[0]: null);
+            }
+        }
+        return flattened;
+    }
+
+    private async solveFrom(tempGrid: string[][][], log: ((x: string) => any)): Promise<string[][][]> {
+        return await new Promise((resolve) => {
+            setTimeout(async () => {
+                const sudokuSize = this.sudoku.getSize();
+
+                let firstUnset: Position = null;
+
+                for (let y = 0; y < sudokuSize.height; y++) {
+                    for (let x = 0; x < sudokuSize.width; x++) {
+                        const pos = { x, y };
+                        const options = tempGrid[y][x];
+                        if (options.length === 0) {
+                            log(`No candidates for ${x},${y}\n`);
+                            resolve([]);
+                            return;
+                        }
+                        if (!firstUnset && options.length > 2) {
+                            firstUnset = pos;
+                            break;
+                        }
+                    }
+                    if (firstUnset) {
+                        break
+                    }
+                }
+
+                if (!firstUnset) {
+                    log("Reached end of dfs\n");
+                    const flattened = this.flatten(tempGrid);
+                    if (this.isValidSolution(flattened, log)) {
+                        resolve([flattened]);
+                    } else {
+                        resolve ([]);
+                    }
+                    return;
+                }
+
+                const solutions: string[][][] = [];
+                const currentList = tempGrid[firstUnset.y][firstUnset.x];
+                const cell = this.sudoku.getCell(firstUnset);
+                for (const option of currentList) {
+                    log(`Trying "${option}" for ${firstUnset.x},${firstUnset.y}\n`);
+                    tempGrid[firstUnset.y][firstUnset.x] = [option];
+                    cell.setValue(option);
+                    if (this.isValidSolution(this.flatten(tempGrid), log)) {
+                        solutions.push(...(await this.solveFrom(tempGrid, log)));
+                    }
+                }
+                tempGrid[firstUnset.y][firstUnset.x] = currentList;
+                cell.setValue(currentList.length === 1 ? currentList[0]: null);
+                resolve(solutions);
+            }, 0);
+        });
+    }
+
+    private isValidSolution(tempGrid: string[][], log: (x: string) => any): boolean {
+        for (const constraint of this.sudoku.getConstraints()) {
+            if (constraint.violates(tempGrid)) {
+                log(`Violated by constraint: ${constraint.friendlyName()}\n`)
+                return false;
+            }
+        }
+        return true;
+    }
 }

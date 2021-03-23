@@ -14,5 +14,13 @@ export class Constraint extends Serializable {
         throw new Error("Unimplemented method");
     }
 
+    public violates(grid: string[][]): boolean {
+        throw new Error("Unimplemented method");
+    }
+
+    public friendlyName(): string {
+        throw new Error("Unimplemented method");
+    }
+
 
 }

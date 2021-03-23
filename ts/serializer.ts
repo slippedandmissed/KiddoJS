@@ -3,6 +3,8 @@ interface Replacement {
     replacement: (arg0: any) => any;
 }
 
+export type state = string;
+
 export class Serializable {
     public className: string;
     
@@ -61,11 +63,11 @@ export class Serializer {
         return copy;
     }
 
-    serialize(object: object): string {
+    serialize(object: object): state {
         return JSON.stringify(object);
     }
 
-    deserialize(serialized: string): any {
+    deserialize(serialized: state): any {
         const replacements: Replacement[] = [
             {
                 predicate: (obj) => {return {satisfies: typeof(obj) === "string", continue: false}},

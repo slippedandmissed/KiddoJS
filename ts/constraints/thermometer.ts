@@ -132,8 +132,15 @@ export class Thermometer extends Constraint {
 
 
         this.container.appendChild(svg);
+    }
 
+    friendlyName(): string {
+        const points = this.coords.map((x) => `(${x.x, x.y})`);
+        return `Thermometer through ${points.join(", ")}`;
+    }
 
+    violates(grid: string[][]) {
+        return false;
     }
 
 }

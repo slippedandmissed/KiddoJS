@@ -1,1 +1,1219 @@
-(()=>{"use strict";var t,e=function(){return(e=Object.assign||function(t){for(var e,n=1,i=arguments.length;n<i;n++)for(var r in e=arguments[n])Object.prototype.hasOwnProperty.call(e,r)&&(t[r]=e[r]);return t}).apply(this,arguments)},n=function(){function t(t){this.className=t}return t.prototype.serialize=function(){return this},t.prototype.deserialize=function(t){throw new Error("Abstract method must be implemented")},t}(),i=function(){function t(t){this.types={},this.types=t}return t.prototype.dfs=function(t,n){var i;for(var r in i=t instanceof Array?function(t,e){for(var n=0,i=e.length,r=t.length;n<i;n++,r++)t[r]=e[n];return t}([],t):t instanceof Object?e({},t):t,t){for(var o=!0,s=null,a=0,l=n;a<l.length;a++){var c=l[a],u=c.predicate(i[r]);if(u.satisfies){s=c,u.continue||(o=!1);break}}o&&(i[r]=this.dfs(i[r],n)),s&&(i[r]=s.replacement(i[r]))}return i},t.prototype.serialize=function(t){return JSON.stringify(t)},t.prototype.deserialize=function(t){var e=this,n=[{predicate:function(t){return{satisfies:"string"==typeof t,continue:!1}},replacement:function(t){return t}},{predicate:function(t){return{satisfies:Object.keys(e.types).includes(null==t?void 0:t.className),continue:!0}},replacement:function(t){return e.types[t.className].deserialize(t)}}];return this.dfs({object:JSON.parse(t)},n).object},t}(),r=(t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)},function(e,n){if("function"!=typeof n&&null!==n)throw new TypeError("Class extends value "+String(n)+" is not a constructor or null");function i(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(i.prototype=n.prototype,new i)}),o=function(t){function e(e,n,i){void 0===i&&(i=null);var r=t.call(this,"Cell")||this;r.selectable=!0,r.selected=!1,r.notes=[],r.notesInnerElements={},i?i.innerHTML="":i=document.createElement("div"),r.container=i,r.container.classList.add("cell"),r.container.classList.add("selectable"),r.valueElement=document.createElement("div"),r.valueElement.classList.add("value"),r.container.appendChild(r.valueElement),r.notesElement=document.createElement("div"),r.notesElement.classList.add("notes"),r.container.appendChild(r.notesElement),r.setValue(e);for(var o=0,s=n;o<s.length;o++){var a=s[o];r.addNote(a)}return r}return r(e,t),e.deserialize=function(t){var n=new e(t.value,t.notes,document.querySelector("#c"+t.pos.x+"-"+t.pos.y));return n.selectable=t.selectable,n.setSelected(t.selected),n.pos=t.pos,n},e.prototype.getContainer=function(){return this.container},e.prototype.getValue=function(){return this.value},e.prototype.getPos=function(){return this.pos},e.prototype.setPos=function(t){this.pos=t,this.container.id="c"+t.x+"-"+t.y},e.prototype.setValue=function(t){this.value=t,this.valueElement.innerText=t},e.prototype.getNotes=function(){return Object.keys(this.notesInnerElements)},e.prototype.addNote=function(t){if(!this.hasNote(t)){this.notes.push(t);var e=document.createElement("span");e.innerText=t,e.classList.add("note-element"),this.notesInnerElements[t]=e;for(var n=!1,i=0;i<this.notesElement.children.length;i++){var r=this.notesElement.children[i];if(t<r.textContent){r.before(e),n=!0;break}}n||this.notesElement.appendChild(e)}},e.prototype.removeNote=function(t){this.hasNote(t)&&(this.notes.splice(this.notes.indexOf(t),1),this.notesInnerElements[t].remove(),delete this.notesInnerElements[t])},e.prototype.hasNote=function(t){return this.notesInnerElements.hasOwnProperty(t)},e.prototype.setNote=function(t,e){e?this.addNote(t):this.removeNote(t)},e.prototype.clearNotes=function(){for(var t=0,e=this.getNotes();t<e.length;t++){var n=e[t];this.notesInnerElements[n].remove(),delete this.notesInnerElements[n],this.notes.length=0}},e.prototype.isSelectable=function(){return this.selectable},e.prototype.setSelectable=function(t){this.selectable=t,this.container.classList[t?"add":"remove"]("selectable")},e.prototype.isSelected=function(){return this.selected},e.prototype.setSelected=function(t){this.selectable&&(this.selected=t,this.container.classList[t?"add":"remove"]("selected"))},e}(n),s=function(t){function e(e,n){void 0===n&&(n=null);var i=t.call(this,e,[],n)||this;return i.className="GivenCell",i.setSelectable(!1),i.getContainer().classList.add("given"),i}return r(e,t),e.deserialize=function(t){var n=new e(t.value,document.querySelector("#c"+t.pos.x+"-"+t.pos.y));return n.setPos(t.pos),n},e}(o),a=function(){function t(t){void 0===t&&(t=1/0),this.states=[],this.pointer=-1,this.maxSize=t}return t.prototype.push=function(t){return(0===this.states.length||this.states[this.pointer]!==t)&&(this.pointer++,this.pointer<this.states.length&&this.states.splice(this.pointer),this.pointer>this.maxSize&&(this.pointer--,this.states.splice(0,1)),this.states.push(t),!0)},t.prototype.undo=function(){return this.pointer>0&&this.pointer--,this.pointer<this.states.length?this.states[this.pointer]:null},t.prototype.redo=function(){return this.pointer<this.states.length-1?(this.pointer++,this.states[this.pointer]):null},t}(),l=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){if("function"!=typeof n&&null!==n)throw new TypeError("Class extends value "+String(n)+" is not a constructor or null");function i(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(i.prototype=n.prototype,new i)}}(),c=function(t){function e(e){return t.call(this,e)||this}return l(e,t),e.prototype.getContainer=function(){throw new Error("Unimplemented method")},e.prototype.initializeContainer=function(){throw new Error("Unimplemented method")},e}(n),u=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){if("function"!=typeof n&&null!==n)throw new TypeError("Class extends value "+String(n)+" is not a constructor or null");function i(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(i.prototype=n.prototype,new i)}}(),h=function(t){function e(e,n,i){void 0===i&&(i=null);var r=t.call(this,"Box")||this;return r.topLeft=e,r.size=n,r.container=i,r}return u(e,t),e.deserialize=function(t){return new e(t.topLeft,t.size,document.querySelector(".b"+t.topLeft.x+"-"+t.topLeft.y+"-"+t.size.width+"-"+t.size.height))},e.prototype.getTopLeft=function(){return this.topLeft},e.prototype.getSize=function(){return this.size},e.prototype.getContainer=function(){return this.container},e.prototype.initializeContainer=function(){this.container?this.container.innerHTML="":this.container=document.createElement("div"),this.container.className="box middleware",this.container.classList.add("b"+this.topLeft.x+"-"+this.topLeft.y+"-"+this.size.width+"-"+this.size.height),this.container.style.gridColumnStart=""+(this.topLeft.x+1),this.container.style.gridColumnEnd=""+(this.topLeft.x+this.size.width+1),this.container.style.gridRowStart=""+(this.topLeft.y+1),this.container.style.gridRowEnd=""+(this.topLeft.y+this.size.height+1)},e}(c),p=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){if("function"!=typeof n&&null!==n)throw new TypeError("Class extends value "+String(n)+" is not a constructor or null");function i(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(i.prototype=n.prototype,new i)}}(),d=function(t){function e(e,n,i){void 0===i&&(i=null);var r=t.call(this,"Sudoku")||this;r.constraints=[],r.grid=e,r.size={width:e[0].length,height:e.length},i||(i=document.createElement("div")),r.container=i,r.container.classList.add("sudoku"),r.initializeGrid();for(var o=0,s=n;o<s.length;o++){var a=s[o];r.addConstraint(a)}return r}return p(e,t),e.deserialize=function(t){return new e(t.grid,t.constraints,document.querySelector(".sudoku"))},e.prototype.initializeGrid=function(){this.container.innerHTML="";for(var t=0;t<this.size.height;t++)for(var e=0;e<this.size.width;e++){var n=this.grid[t][e].getContainer();n.style.gridColumnStart=""+(e+1),n.style.gridRowStart=""+(t+1),this.container.appendChild(n)}},e.prototype.addConstraint=function(t){this.constraints.push(t),t.initializeContainer(),this.container.appendChild(t.getContainer())},e.CreateStandard=function(t,n){void 0===t&&(t=3),void 0===n&&(n=3);for(var i=[],r=[],s=t*n,a=0;a<t;a++)for(var l=0;l<t;l++)r.push(new h({x:a*n,y:l*n},{width:n,height:n}));for(var c=0;c<s;c++){i[c]=[];for(var u=0;u<s;u++){var p=new o(null,[]);p.setPos({x:u,y:c}),i[c].push(p)}}return new e(i,r)},e.prototype.getContainer=function(){return this.container},e.prototype.setCell=function(t,e){this.grid[t.y][t.x].getContainer().remove(),delete this.grid[t.y][t.x],e.setPos(t),this.grid[t.y][t.x]=e;var n=e.getContainer();n.style.gridColumnStart=""+(t.x+1),n.style.gridRowStart=""+(t.y+1),this.container.appendChild(n)},e.prototype.getCell=function(t){return this.grid[t.y][t.x]},e}(n),f=function(){var t=function(e,n){return(t=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(t,e){t.__proto__=e}||function(t,e){for(var n in e)Object.prototype.hasOwnProperty.call(e,n)&&(t[n]=e[n])})(e,n)};return function(e,n){if("function"!=typeof n&&null!==n)throw new TypeError("Class extends value "+String(n)+" is not a constructor or null");function i(){this.constructor=e}t(e,n),e.prototype=null===n?Object.create(n):(i.prototype=n.prototype,new i)}}(),y=function(t){function e(e,n){void 0===n&&(n=null);var i=t.call(this,"Thermometer")||this;i.coords=e,i.container=n;for(var r=1/0,o=1/0,s=-1/0,a=-1/0,l=0,c=e;l<c.length;l++)(p=c[l]).x<o&&(o=p.x),p.x>a&&(a=p.x),p.y<r&&(r=p.y),p.y>s&&(s=p.y);i.topLeft={x:o,y:r},i.size={width:a-o+1,height:s-r+1},i.relativeCoords=[];for(var u=0,h=e;u<h.length;u++){var p=h[u];i.relativeCoords.push({x:p.x-o,y:p.y-r})}return i}return f(e,t),e.deserialize=function(t){return new e(t.coords,document.querySelector(e.generateID.bind(t)()))},e.prototype.getContainer=function(){return this.container},e.generateID=function(){for(var t="th",e=0,n=this.coords;e<n.length;e++){var i=n[e];t+=i.x+"-"+i.y+"-"}return t.slice(0,-1)},e.prototype.initializeContainer=function(){var t=this;this.container?this.container.innerHTML="":this.container=document.createElement("div"),this.container.className="thermometer middleware",this.container.classList.add(e.generateID.bind(this)()),this.container.style.gridColumnStart=""+(this.topLeft.x+1),this.container.style.gridColumnEnd=""+(this.topLeft.x+this.size.width+1),this.container.style.gridRowStart=""+(this.topLeft.y+1),this.container.style.gridRowEnd=""+(this.topLeft.y+this.size.height+1);for(var n=function(){var e=m("circle");return e.setAttribute("cx",""+(t.relativeCoords[0].x+.5)),e.setAttribute("cy",""+(t.relativeCoords[0].y+.5)),e.setAttribute("r","0.42"),e},i="mask"+w();document.getElementById(i);)i="mask"+w();var r=m("svg");r.setAttribute("viewBox","0 0 "+this.size.width+" "+this.size.height),r.setAttribute("preserveAspectRatio","none");var o=m("polyline");r.appendChild(o);var s=m("defs"),a=m("mask");a.setAttribute("id",i),s.appendChild(a);var l=m("rect");l.setAttribute("x","0"),l.setAttribute("y","0"),l.setAttribute("width",""+this.size.width),l.setAttribute("height",""+this.size.height),l.setAttribute("stroke","none"),l.setAttribute("fill","white"),a.appendChild(l);var c=m("polyline");c.classList.add("inner"),c.setAttribute("stroke","black"),a.appendChild(c);var u=n();u.classList.add("mask"),a.appendChild(u),r.appendChild(s);for(var h=[],p=0,d=this.relativeCoords;p<d.length;p++){var f=d[p];h.push(f.x+.5+","+(f.y+.5))}o.setAttribute("mask","url(#"+i+")"),o.setAttribute("points",h.join(" ")),c.setAttribute("points",h.join(" ")),r.appendChild(n()),this.container.appendChild(r)},e}(c),v=["1","2","3","4","5","6","7","8","9"],g={Sudoku:d,Cell:o,GivenCell:s,Box:h,Thermometer:y};function m(t){return document.createElementNS("http://www.w3.org/2000/svg",t)}function w(t){void 0===t&&(t=10);for(var e="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",n="",i=0;i<t;i++)n+=e.charAt(Math.floor(Math.random()*e.length));return n}var C=function(){function t(t,e,n,r){void 0===n&&(n=v),void 0===r&&(r=null),this.selected=[],this.title=t,this.sudoku=e,this.alphabet=n,r||(r=new i(g)),this.serializer=r,this.historyStack=new a,this.pushState(),this.getSudokuElement().addEventListener("click",this.onClick.bind(this)),document.addEventListener("keydown",this.onKeyDown.bind(this))}return t.prototype.pushState=function(){var t=this.serializer.serialize(this.sudoku);this.historyStack.push(t)},t.prototype.loadState=function(t){var e=this;t&&(this.sudoku=this.serializer.deserialize(t),this.selected=[],document.querySelectorAll(".cell.selected").forEach((function(t){var n=t.id.slice(1).split("-"),i={x:+n[0],y:+n[1]};e.selected.push(e.sudoku.getCell(i))})))},t.prototype.onClick=function(t){var e=t.target,n=function(t,e){for(var n=0,i=e.length,r=t.length;n<i;n++,r++)t[r]=e[n];return t}([],this.selected);if(!t.shiftKey){for(var i=0,r=this.selected;i<r.length;i++)(o=r[i]).setSelected(!1);this.selected.length=0}if(e.classList.contains("cell")){var o,s=e.id.slice(1).split("-"),a={x:+s[0],y:+s[1]};if((o=this.sudoku.getCell(a)).setSelected(!n.includes(o)||n.length>1),o.isSelected())this.selected.push(o);else{var l=this.selected.indexOf(o);l>=0&&this.selected.splice(l,1)}}this.pushState()},t.prototype.onKeyDown=function(t){var e=String.fromCharCode(t.keyCode).toUpperCase();if(t.ctrlKey)"Z"===e&&this.loadState(this.historyStack.undo()),"Y"===e&&this.loadState(this.historyStack.redo());else if(this.alphabet.includes(e)){if(t.shiftKey){for(var n=!0,i=0,r=this.selected;i<r.length;i++)if(!r[i].hasNote(e)){n=!1;break}for(var o=0,s=this.selected;o<s.length;o++)s[o].setNote(e,!n)}else for(var a=0,l=this.selected;a<l.length;a++)l[a].setValue(e);this.pushState()}else if("Backspace"===t.key){if(t.shiftKey)for(var c=0,u=this.selected;c<u.length;c++)u[c].clearNotes();else for(var h=0,p=this.selected;h<p.length;h++)p[h].setValue(null);this.pushState()}},t.prototype.getTitle=function(){return this.title},t.prototype.setTitle=function(t){this.title=t},t.prototype.getSudoku=function(){return this.sudoku},t.prototype.getSudokuElement=function(){return this.sudoku.getContainer()},t}(),b=d.CreateStandard();b.setCell({x:2,y:3},new s("5")),b.addConstraint(new y([{x:2,y:2},{x:3,y:3},{x:4,y:2},{x:4,y:1},{x:3,y:0}])),b.addConstraint(new y([{x:2,y:2},{x:1,y:2}]));var S=new C("My Sudoku",b);window.onload=function(){document.body.appendChild(S.getSudokuElement())}})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+var __webpack_exports__ = {};
+
+;// CONCATENATED MODULE: ./ts/serializer.ts
+var __assign = (undefined && undefined.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
+var __spreadArray = (undefined && undefined.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
+};
+var Serializable = (function () {
+    function Serializable(className) {
+        this.className = className;
+    }
+    Serializable.prototype.serialize = function () {
+        return this;
+    };
+    Serializable.prototype.deserialize = function (obj) {
+        throw new Error("Abstract method must be implemented");
+    };
+    return Serializable;
+}());
+
+var Serializer = (function () {
+    function Serializer(types) {
+        this.types = {};
+        this.types = types;
+    }
+    Serializer.prototype.dfs = function (obj, replacements) {
+        var copy;
+        if (obj instanceof Array) {
+            copy = __spreadArray([], obj);
+        }
+        else if (obj instanceof Object) {
+            copy = __assign({}, obj);
+        }
+        else {
+            copy = obj;
+        }
+        for (var key in obj) {
+            var c = true;
+            var satisfies = null;
+            for (var _i = 0, replacements_1 = replacements; _i < replacements_1.length; _i++) {
+                var r = replacements_1[_i];
+                var pred = r.predicate(copy[key]);
+                if (pred.satisfies) {
+                    satisfies = r;
+                    if (!pred["continue"]) {
+                        c = false;
+                    }
+                    break;
+                }
+            }
+            if (c) {
+                copy[key] = this.dfs(copy[key], replacements);
+            }
+            if (satisfies) {
+                copy[key] = satisfies.replacement(copy[key]);
+            }
+        }
+        return copy;
+    };
+    Serializer.prototype.serialize = function (object) {
+        return JSON.stringify(object);
+    };
+    Serializer.prototype.deserialize = function (serialized) {
+        var _this = this;
+        var replacements = [
+            {
+                predicate: function (obj) { return { satisfies: typeof (obj) === "string", "continue": false }; },
+                replacement: function (obj) { return obj; }
+            },
+            {
+                predicate: function (obj) { return { satisfies: Object.keys(_this.types).includes(obj === null || obj === void 0 ? void 0 : obj.className), "continue": true }; },
+                replacement: function (obj) {
+                    var des = _this.types[obj.className].deserialize(obj);
+                    return des;
+                }
+            }
+        ];
+        return this.dfs({ object: JSON.parse(serialized) }, replacements).object;
+    };
+    return Serializer;
+}());
+
+
+;// CONCATENATED MODULE: ./ts/cell.ts
+var __extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+var Cell = (function (_super) {
+    __extends(Cell, _super);
+    function Cell(value, notes, container) {
+        if (container === void 0) { container = null; }
+        var _this = _super.call(this, "Cell") || this;
+        _this.selectable = true;
+        _this.selected = false;
+        _this.notes = [];
+        _this.notesInnerElements = {};
+        if (container) {
+            container.innerHTML = "";
+        }
+        else {
+            container = document.createElement("div");
+        }
+        _this.container = container;
+        _this.container.classList.add("cell");
+        _this.container.classList.add("selectable");
+        _this.valueElement = document.createElement("div");
+        _this.valueElement.classList.add("value");
+        _this.container.appendChild(_this.valueElement);
+        _this.notesElement = document.createElement("div");
+        _this.notesElement.classList.add("notes");
+        _this.container.appendChild(_this.notesElement);
+        _this.setValue(value);
+        for (var _i = 0, notes_1 = notes; _i < notes_1.length; _i++) {
+            var note = notes_1[_i];
+            _this.addNote(note);
+        }
+        return _this;
+    }
+    Cell.deserialize = function (obj) {
+        var cell = new Cell(obj.value, obj.notes, document.querySelector("#c" + obj.pos.x + "-" + obj.pos.y));
+        cell.selectable = obj.selectable;
+        cell.setSelected(obj.selected);
+        cell.pos = obj.pos;
+        return cell;
+    };
+    Cell.prototype.getContainer = function () {
+        return this.container;
+    };
+    Cell.prototype.getValue = function () {
+        return this.value;
+    };
+    Cell.prototype.getPos = function () {
+        return this.pos;
+    };
+    Cell.prototype.setPos = function (pos) {
+        this.pos = pos;
+        this.container.id = "c" + pos.x + "-" + pos.y;
+    };
+    Cell.prototype.setValue = function (value) {
+        this.value = value;
+        this.valueElement.innerText = value;
+    };
+    Cell.prototype.getNotes = function () {
+        return Object.keys(this.notesInnerElements);
+    };
+    Cell.prototype.addNote = function (note) {
+        if (!this.hasNote(note)) {
+            this.notes.push(note);
+            var elt = document.createElement("span");
+            elt.innerText = note;
+            elt.classList.add("note-element");
+            this.notesInnerElements[note] = elt;
+            var added = false;
+            for (var i = 0; i < this.notesElement.children.length; i++) {
+                var node = this.notesElement.children[i];
+                if (note < node.textContent) {
+                    node.before(elt);
+                    added = true;
+                    break;
+                }
+            }
+            if (!added) {
+                this.notesElement.appendChild(elt);
+            }
+        }
+    };
+    Cell.prototype.removeNote = function (note) {
+        if (this.hasNote(note)) {
+            this.notes.splice(this.notes.indexOf(note), 1);
+            this.notesInnerElements[note].remove();
+            delete this.notesInnerElements[note];
+        }
+    };
+    Cell.prototype.hasNote = function (note) {
+        return this.notesInnerElements.hasOwnProperty(note);
+    };
+    Cell.prototype.setNote = function (note, add) {
+        if (add) {
+            this.addNote(note);
+        }
+        else {
+            this.removeNote(note);
+        }
+    };
+    Cell.prototype.clearNotes = function () {
+        for (var _i = 0, _a = this.getNotes(); _i < _a.length; _i++) {
+            var note = _a[_i];
+            this.notesInnerElements[note].remove();
+            delete this.notesInnerElements[note];
+            this.notes.length = 0;
+        }
+    };
+    Cell.prototype.isSelectable = function () {
+        return this.selectable;
+    };
+    Cell.prototype.setSelectable = function (selectable) {
+        this.selectable = selectable;
+        this.container.classList[selectable ? "add" : "remove"]("selectable");
+    };
+    Cell.prototype.isSelected = function () {
+        return this.selected;
+    };
+    Cell.prototype.setSelected = function (selected) {
+        if (this.selectable) {
+            this.selected = selected;
+            this.container.classList[selected ? "add" : "remove"]("selected");
+        }
+    };
+    return Cell;
+}(Serializable));
+
+var GivenCell = (function (_super) {
+    __extends(GivenCell, _super);
+    function GivenCell(value, container) {
+        if (container === void 0) { container = null; }
+        var _this = _super.call(this, value, [], container) || this;
+        _this.className = "GivenCell";
+        _this.setSelectable(false);
+        _this.getContainer().classList.add("given");
+        return _this;
+    }
+    GivenCell.deserialize = function (obj) {
+        var cell = new GivenCell(obj.value, document.querySelector("#c" + obj.pos.x + "-" + obj.pos.y));
+        cell.setPos(obj.pos);
+        return cell;
+    };
+    return GivenCell;
+}(Cell));
+
+
+;// CONCATENATED MODULE: ./ts/historystack.ts
+var HistoryStack = (function () {
+    function HistoryStack(maxSize) {
+        if (maxSize === void 0) { maxSize = Infinity; }
+        this.states = [];
+        this.pointer = -1;
+        this.maxSize = maxSize;
+    }
+    HistoryStack.prototype.push = function (state) {
+        if (this.states.length === 0 || this.states[this.pointer] !== state) {
+            this.pointer++;
+            if (this.pointer < this.states.length) {
+                this.states.splice(this.pointer);
+            }
+            if (this.pointer > this.maxSize) {
+                this.pointer--;
+                this.states.splice(0, 1);
+            }
+            this.states.push(state);
+            return true;
+        }
+        return false;
+    };
+    HistoryStack.prototype.undo = function () {
+        if (this.pointer > 0) {
+            this.pointer--;
+        }
+        if (this.pointer < this.states.length) {
+            return this.states[this.pointer];
+        }
+        return null;
+    };
+    HistoryStack.prototype.redo = function () {
+        if (this.pointer < this.states.length - 1) {
+            this.pointer++;
+            return this.states[this.pointer];
+        }
+        return null;
+    };
+    return HistoryStack;
+}());
+
+
+;// CONCATENATED MODULE: ./ts/constraints/constraint.ts
+var constraint_extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+var Constraint = (function (_super) {
+    constraint_extends(Constraint, _super);
+    function Constraint(className) {
+        return _super.call(this, className) || this;
+    }
+    Constraint.prototype.getContainer = function () {
+        throw new Error("Unimplemented method");
+    };
+    Constraint.prototype.initializeContainer = function () {
+        throw new Error("Unimplemented method");
+    };
+    Constraint.prototype.violates = function (grid) {
+        throw new Error("Unimplemented method");
+    };
+    Constraint.prototype.friendlyName = function () {
+        throw new Error("Unimplemented method");
+    };
+    return Constraint;
+}(Serializable));
+
+
+;// CONCATENATED MODULE: ./ts/constraints/box.ts
+var box_extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+var Box = (function (_super) {
+    box_extends(Box, _super);
+    function Box(topLeft, size, container) {
+        if (container === void 0) { container = null; }
+        var _this = _super.call(this, "Box") || this;
+        _this.topLeft = topLeft;
+        _this.size = size;
+        _this.container = container;
+        return _this;
+    }
+    Box.deserialize = function (obj) {
+        return new Box(obj.topLeft, obj.size, document.querySelector(".b" + obj.topLeft.x + "-" + obj.topLeft.y + "-" + obj.size.width + "-" + obj.size.height));
+    };
+    Box.prototype.getTopLeft = function () {
+        return this.topLeft;
+    };
+    Box.prototype.getSize = function () {
+        return this.size;
+    };
+    Box.prototype.getContainer = function () {
+        return this.container;
+    };
+    Box.prototype.initializeContainer = function () {
+        if (this.container) {
+            this.container.innerHTML = "";
+        }
+        else {
+            this.container = document.createElement("div");
+        }
+        this.container.className = "box middleware";
+        this.container.classList.add("b" + this.topLeft.x + "-" + this.topLeft.y + "-" + this.size.width + "-" + this.size.height);
+        this.container.style.gridColumnStart = "" + (this.topLeft.x + 1);
+        this.container.style.gridColumnEnd = "" + (this.topLeft.x + this.size.width + 1);
+        this.container.style.gridRowStart = "" + (this.topLeft.y + 1);
+        this.container.style.gridRowEnd = "" + (this.topLeft.y + this.size.height + 1);
+    };
+    Box.prototype.friendlyName = function () {
+        return "Box (" + this.topLeft.x + "," + this.topLeft.y + ") to (" + (this.topLeft.x + this.size.width) + "," + (this.topLeft.y + this.size.height) + ")";
+    };
+    Box.prototype.violates = function (grid) {
+        var soFar = [];
+        for (var y = this.topLeft.y; y < this.topLeft.y + this.size.height; y++) {
+            for (var x = this.topLeft.x; x < this.topLeft.x + this.size.width; x++) {
+                var item = grid[y][x];
+                if (!item) {
+                    continue;
+                }
+                if (soFar.includes(item)) {
+                    return true;
+                }
+                soFar.push(item);
+            }
+        }
+        return false;
+    };
+    return Box;
+}(Constraint));
+
+
+;// CONCATENATED MODULE: ./ts/constraints/rowcolumnrepeats.ts
+var rowcolumnrepeats_extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+var RowColumnRepeats = (function (_super) {
+    rowcolumnrepeats_extends(RowColumnRepeats, _super);
+    function RowColumnRepeats() {
+        return _super.call(this, "RowColumnRepeats") || this;
+    }
+    RowColumnRepeats.deserialize = function (obj) {
+        return new RowColumnRepeats();
+    };
+    RowColumnRepeats.prototype.initializeContainer = function () {
+    };
+    RowColumnRepeats.prototype.getContainer = function () {
+        return null;
+    };
+    RowColumnRepeats.prototype.friendlyName = function () {
+        return "Row and column repeats";
+    };
+    RowColumnRepeats.prototype.violates = function (grid) {
+        for (var _i = 0, grid_1 = grid; _i < grid_1.length; _i++) {
+            var row = grid_1[_i];
+            var filtered = row.filter(function (x) { return !!x; });
+            if ((new Set(filtered)).size !== filtered.length) {
+                return true;
+            }
+        }
+        for (var x = 0; x < grid[0].length; x++) {
+            var column = [];
+            for (var y = 0; y < grid.length; y++) {
+                var item = grid[y][x];
+                if (!item) {
+                    continue;
+                }
+                if (column.includes(item)) {
+                    return true;
+                }
+                column.push(item);
+            }
+        }
+        return false;
+    };
+    return RowColumnRepeats;
+}(Constraint));
+
+
+;// CONCATENATED MODULE: ./ts/sudoku.ts
+var sudoku_extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+
+
+var Sudoku = (function (_super) {
+    sudoku_extends(Sudoku, _super);
+    function Sudoku(grid, constraints, container) {
+        if (container === void 0) { container = null; }
+        var _this = _super.call(this, "Sudoku") || this;
+        _this.constraints = [];
+        _this.grid = grid;
+        _this.size = {
+            width: grid[0].length,
+            height: grid.length
+        };
+        if (!container) {
+            container = document.createElement("div");
+        }
+        _this.container = container;
+        _this.container.classList.add("sudoku");
+        _this.initializeGrid();
+        for (var _i = 0, constraints_1 = constraints; _i < constraints_1.length; _i++) {
+            var constraint = constraints_1[_i];
+            _this.addConstraint(constraint);
+        }
+        return _this;
+    }
+    Sudoku.deserialize = function (obj) {
+        return new Sudoku(obj.grid, obj.constraints, document.querySelector(".sudoku"));
+    };
+    Sudoku.prototype.initializeGrid = function () {
+        this.container.innerHTML = "";
+        for (var y = 0; y < this.size.height; y++) {
+            for (var x = 0; x < this.size.width; x++) {
+                var cell = this.grid[y][x];
+                var container = cell.getContainer();
+                container.style.gridColumnStart = "" + (x + 1);
+                container.style.gridRowStart = "" + (y + 1);
+                this.container.appendChild(container);
+            }
+        }
+    };
+    Sudoku.prototype.addConstraint = function (constraint) {
+        this.constraints.push(constraint);
+        constraint.initializeContainer();
+        var container = constraint.getContainer();
+        if (container) {
+            this.container.appendChild(constraint.getContainer());
+        }
+    };
+    Sudoku.CreateStandard = function (major, minor) {
+        if (major === void 0) { major = 3; }
+        if (minor === void 0) { minor = 3; }
+        var cells = [];
+        var constraints = [];
+        var size = major * minor;
+        for (var i = 0; i < major; i++) {
+            for (var j = 0; j < major; j++) {
+                constraints.push(new Box({
+                    x: i * minor,
+                    y: j * minor
+                }, {
+                    width: minor,
+                    height: minor
+                }));
+            }
+        }
+        constraints.push(new RowColumnRepeats());
+        for (var y = 0; y < size; y++) {
+            cells[y] = [];
+            for (var x = 0; x < size; x++) {
+                var cell = new Cell(null, []);
+                cell.setPos({ x: x, y: y });
+                cells[y].push(cell);
+            }
+        }
+        return new Sudoku(cells, constraints);
+    };
+    Sudoku.prototype.getSize = function () {
+        return this.size;
+    };
+    Sudoku.prototype.getConstraints = function () {
+        return this.constraints;
+    };
+    Sudoku.prototype.getContainer = function () {
+        return this.container;
+    };
+    Sudoku.prototype.setCell = function (pos, cell) {
+        this.grid[pos.y][pos.x].getContainer().remove();
+        delete this.grid[pos.y][pos.x];
+        ;
+        cell.setPos(pos);
+        this.grid[pos.y][pos.x] = cell;
+        var container = cell.getContainer();
+        container.style.gridColumnStart = "" + (pos.x + 1);
+        container.style.gridRowStart = "" + (pos.y + 1);
+        this.container.appendChild(container);
+    };
+    Sudoku.prototype.getCell = function (pos) {
+        return this.grid[pos.y][pos.x];
+    };
+    Sudoku.prototype.setValuesFromGrid = function (grid) {
+        for (var y = 0; y < this.size.height; y++) {
+            for (var x = 0; x < this.size.width; x++) {
+                var options = grid[y][x];
+                var cell = this.grid[y][x];
+                cell.clearNotes();
+                if (options.length === 1) {
+                    cell.setValue(options[0]);
+                }
+                else {
+                    cell.setValue(null);
+                    for (var _i = 0, options_1 = options; _i < options_1.length; _i++) {
+                        var note = options_1[_i];
+                        cell.addNote(note);
+                    }
+                }
+            }
+        }
+    };
+    return Sudoku;
+}(Serializable));
+
+
+;// CONCATENATED MODULE: ./ts/constraints/thermometer.ts
+var thermometer_extends = (undefined && undefined.__extends) || (function () {
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
+    return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+
+
+var Thermometer = (function (_super) {
+    thermometer_extends(Thermometer, _super);
+    function Thermometer(coords, container) {
+        if (container === void 0) { container = null; }
+        var _this = _super.call(this, "Thermometer") || this;
+        _this.coords = coords;
+        _this.container = container;
+        var top = Infinity;
+        var left = Infinity;
+        var bottom = -Infinity;
+        var right = -Infinity;
+        for (var _i = 0, coords_1 = coords; _i < coords_1.length; _i++) {
+            var coord = coords_1[_i];
+            if (coord.x < left) {
+                left = coord.x;
+            }
+            if (coord.x > right) {
+                right = coord.x;
+            }
+            if (coord.y < top) {
+                top = coord.y;
+            }
+            if (coord.y > bottom) {
+                bottom = coord.y;
+            }
+        }
+        _this.topLeft = { x: left, y: top };
+        _this.size = { width: right - left + 1, height: bottom - top + 1 };
+        _this.relativeCoords = [];
+        for (var _a = 0, coords_2 = coords; _a < coords_2.length; _a++) {
+            var coord = coords_2[_a];
+            _this.relativeCoords.push({
+                x: coord.x - left,
+                y: coord.y - top
+            });
+        }
+        return _this;
+    }
+    Thermometer.deserialize = function (obj) {
+        return new Thermometer(obj.coords, document.querySelector(Thermometer.generateID.bind(obj)()));
+    };
+    Thermometer.prototype.getContainer = function () {
+        return this.container;
+    };
+    Thermometer.generateID = function () {
+        var id = "th";
+        for (var _i = 0, _a = this.coords; _i < _a.length; _i++) {
+            var point = _a[_i];
+            id += point.x + "-" + point.y + "-";
+        }
+        return id.slice(0, -1);
+    };
+    Thermometer.prototype.initializeContainer = function () {
+        var _this = this;
+        if (this.container) {
+            this.container.innerHTML = "";
+        }
+        else {
+            this.container = document.createElement("div");
+        }
+        this.container.className = "thermometer middleware";
+        this.container.classList.add(Thermometer.generateID.bind(this)());
+        this.container.style.gridColumnStart = "" + (this.topLeft.x + 1);
+        this.container.style.gridColumnEnd = "" + (this.topLeft.x + this.size.width + 1);
+        this.container.style.gridRowStart = "" + (this.topLeft.y + 1);
+        this.container.style.gridRowEnd = "" + (this.topLeft.y + this.size.height + 1);
+        var createBulb = function () {
+            var bulb = createSVGElement("circle");
+            bulb.setAttribute("cx", "" + (_this.relativeCoords[0].x + 0.5));
+            bulb.setAttribute("cy", "" + (_this.relativeCoords[0].y + 0.5));
+            bulb.setAttribute("r", "0.42");
+            return bulb;
+        };
+        var maskID = "mask" + randomString();
+        while (document.getElementById(maskID)) {
+            maskID = "mask" + randomString();
+        }
+        var svg = createSVGElement("svg");
+        svg.setAttribute("viewBox", "0 0 " + this.size.width + " " + this.size.height);
+        svg.setAttribute("preserveAspectRatio", "none");
+        var polyline = createSVGElement("polyline");
+        svg.appendChild(polyline);
+        var defs = createSVGElement("defs");
+        var mask = createSVGElement("mask");
+        mask.setAttribute("id", maskID);
+        defs.appendChild(mask);
+        var bg = createSVGElement("rect");
+        bg.setAttribute("x", "0");
+        bg.setAttribute("y", "0");
+        bg.setAttribute("width", "" + this.size.width);
+        bg.setAttribute("height", "" + this.size.height);
+        bg.setAttribute("stroke", "none");
+        bg.setAttribute("fill", "white");
+        mask.appendChild(bg);
+        var inner = createSVGElement("polyline");
+        inner.classList.add("inner");
+        inner.setAttribute("stroke", "black");
+        mask.appendChild(inner);
+        var bulbMask = createBulb();
+        bulbMask.classList.add("mask");
+        mask.appendChild(bulbMask);
+        svg.appendChild(defs);
+        var points = [];
+        for (var _i = 0, _a = this.relativeCoords; _i < _a.length; _i++) {
+            var pos = _a[_i];
+            points.push((pos.x + 0.5) + "," + (pos.y + 0.5));
+        }
+        polyline.setAttribute("mask", "url(#" + maskID + ")");
+        polyline.setAttribute("points", points.join(" "));
+        inner.setAttribute("points", points.join(" "));
+        svg.appendChild(createBulb());
+        this.container.appendChild(svg);
+    };
+    Thermometer.prototype.friendlyName = function () {
+        var points = this.coords.map(function (x) { return "(" + (x.x, x.y) + ")"; });
+        return "Thermometer through " + points.join(", ");
+    };
+    Thermometer.prototype.violates = function (grid) {
+        return false;
+    };
+    return Thermometer;
+}(Constraint));
+
+
+;// CONCATENATED MODULE: ./ts/tools.ts
+
+
+
+
+
+var numerals = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+var classes = {
+    "Sudoku": Sudoku,
+    "Cell": Cell,
+    "GivenCell": GivenCell,
+    "Box": Box,
+    "Thermometer": Thermometer,
+    "RowColumnRepeats": RowColumnRepeats
+};
+function createSVGElement(tag) {
+    return document.createElementNS("http://www.w3.org/2000/svg", tag);
+}
+function randomString(length) {
+    if (length === void 0) { length = 10; }
+    var alph = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var result = "";
+    for (var i = 0; i < length; i++) {
+        result += alph.charAt(Math.floor(Math.random() * alph.length));
+    }
+    return result;
+}
+
+;// CONCATENATED MODULE: ./ts/puzzle.ts
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+var puzzle_spreadArray = (undefined && undefined.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
+};
+
+
+
+var Puzzle = (function () {
+    function Puzzle(title, sudoku, alphabet, serializer) {
+        if (alphabet === void 0) { alphabet = numerals; }
+        if (serializer === void 0) { serializer = null; }
+        this.selected = [];
+        this.title = title;
+        this.sudoku = sudoku;
+        this.alphabet = alphabet;
+        if (!serializer) {
+            serializer = new Serializer(classes);
+        }
+        this.serializer = serializer;
+        this.historyStack = new HistoryStack();
+        this.pushState();
+        this.getSudokuElement().addEventListener("click", this.onClick.bind(this));
+        document.addEventListener("keydown", this.onKeyDown.bind(this));
+    }
+    Puzzle.prototype.getState = function () {
+        return this.serializer.serialize(this.sudoku);
+    };
+    Puzzle.prototype.pushState = function () {
+        this.historyStack.push(this.getState());
+    };
+    Puzzle.prototype.loadState = function (state) {
+        var _this = this;
+        if (state) {
+            this.sudoku = this.serializer.deserialize(state);
+            this.selected = [];
+            document.querySelectorAll(".cell.selected").forEach(function (element) {
+                var idParts = element.id.slice(1).split("-");
+                var pos = {
+                    x: +idParts[0],
+                    y: +idParts[1]
+                };
+                _this.selected.push(_this.sudoku.getCell(pos));
+            });
+        }
+    };
+    Puzzle.prototype.onClick = function (event) {
+        if (this.preSolveState) {
+            return;
+        }
+        var target = event.target;
+        var oldSelected = puzzle_spreadArray([], this.selected);
+        if (!event.shiftKey) {
+            for (var _i = 0, _a = this.selected; _i < _a.length; _i++) {
+                var cell = _a[_i];
+                cell.setSelected(false);
+            }
+            this.selected.length = 0;
+        }
+        if (target.classList.contains("cell")) {
+            var idParts = target.id.slice(1).split("-");
+            var pos = {
+                x: +idParts[0],
+                y: +idParts[1]
+            };
+            var cell = this.sudoku.getCell(pos);
+            cell.setSelected(!oldSelected.includes(cell) || oldSelected.length > 1);
+            if (cell.isSelected()) {
+                this.selected.push(cell);
+            }
+            else {
+                var index = this.selected.indexOf(cell);
+                if (index >= 0) {
+                    this.selected.splice(index, 1);
+                }
+            }
+        }
+        this.pushState();
+    };
+    Puzzle.prototype.onKeyDown = function (event) {
+        if (this.preSolveState) {
+            return;
+        }
+        var key = String.fromCharCode(event.keyCode).toUpperCase();
+        if (event.ctrlKey) {
+            if (key === "Z") {
+                this.loadState(this.historyStack.undo());
+            }
+            if (key === "Y") {
+                this.loadState(this.historyStack.redo());
+            }
+        }
+        else {
+            if (this.alphabet.includes(key)) {
+                if (event.shiftKey) {
+                    var allHave = true;
+                    for (var _i = 0, _a = this.selected; _i < _a.length; _i++) {
+                        var cell = _a[_i];
+                        if (!cell.hasNote(key)) {
+                            allHave = false;
+                            break;
+                        }
+                    }
+                    for (var _b = 0, _c = this.selected; _b < _c.length; _b++) {
+                        var cell = _c[_b];
+                        cell.setNote(key, !allHave);
+                    }
+                }
+                else {
+                    for (var _d = 0, _e = this.selected; _d < _e.length; _d++) {
+                        var cell = _e[_d];
+                        cell.setValue(key);
+                    }
+                }
+                this.pushState();
+            }
+            else if (event.key === "Backspace") {
+                if (event.shiftKey) {
+                    for (var _f = 0, _g = this.selected; _f < _g.length; _f++) {
+                        var cell = _g[_f];
+                        cell.clearNotes();
+                    }
+                }
+                else {
+                    for (var _h = 0, _j = this.selected; _h < _j.length; _h++) {
+                        var cell = _j[_h];
+                        cell.setValue(null);
+                    }
+                }
+                this.pushState();
+            }
+        }
+    };
+    Puzzle.prototype.getTitle = function () {
+        return this.title;
+    };
+    Puzzle.prototype.setTitle = function (title) {
+        this.title = title;
+    };
+    Puzzle.prototype.getSudoku = function () {
+        return this.sudoku;
+    };
+    Puzzle.prototype.getSudokuElement = function () {
+        return this.sudoku.getContainer();
+    };
+    Puzzle.prototype.solve = function (log) {
+        if (log === void 0) { log = function (_) { }; }
+        return __awaiter(this, void 0, void 0, function () {
+            var tempGrid, sudokuSize, y, row, x, pos, cell, val, notes_1, y, x, allSolutions, notes, y, row, x, _i, allSolutions_1, solution, y, x, notesList, item;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.preSolveState = this.getState();
+                        log("Starting solve\n");
+                        tempGrid = [];
+                        sudokuSize = this.sudoku.getSize();
+                        for (y = 0; y < sudokuSize.height; y++) {
+                            row = [];
+                            tempGrid.push(row);
+                            for (x = 0; x < sudokuSize.width; x++) {
+                                pos = { x: x, y: y };
+                                cell = this.sudoku.getCell(pos);
+                                val = cell.getValue();
+                                if (val) {
+                                    row.push([val]);
+                                }
+                                else {
+                                    notes_1 = cell.getNotes();
+                                    if (notes_1.length > 0) {
+                                        row.push(notes_1);
+                                    }
+                                    else {
+                                        row.push(puzzle_spreadArray([], this.alphabet));
+                                    }
+                                }
+                            }
+                        }
+                        for (y = 0; y < sudokuSize.height; y++) {
+                            for (x = 0; x < sudokuSize.width; x++) {
+                                this.sudoku.getCell({ x: x, y: y }).clearNotes();
+                            }
+                        }
+                        return [4, this.solveFrom(tempGrid, log)];
+                    case 1:
+                        allSolutions = _a.sent();
+                        if (allSolutions.length === 0) {
+                            log("No solutions...");
+                            this.loadState(this.preSolveState);
+                            this.preSolveState = null;
+                            return [2, null];
+                        }
+                        log(allSolutions.length + " solutions");
+                        notes = [];
+                        for (y = 0; y < sudokuSize.height; y++) {
+                            row = [];
+                            notes.push(row);
+                            for (x = 0; x < sudokuSize.width; x++) {
+                                row.push([]);
+                            }
+                        }
+                        for (_i = 0, allSolutions_1 = allSolutions; _i < allSolutions_1.length; _i++) {
+                            solution = allSolutions_1[_i];
+                            for (y = 0; y < sudokuSize.height; y++) {
+                                for (x = 0; x < sudokuSize.width; x++) {
+                                    notesList = notes[y][x];
+                                    item = solution[y][x];
+                                    if (!notesList.includes(item)) {
+                                        notesList.push(item);
+                                    }
+                                }
+                            }
+                        }
+                        this.loadState(this.preSolveState);
+                        this.preSolveState = null;
+                        return [2, notes];
+                }
+            });
+        });
+    };
+    Puzzle.prototype.flatten = function (tempGrid) {
+        var flattened = [];
+        for (var _i = 0, tempGrid_1 = tempGrid; _i < tempGrid_1.length; _i++) {
+            var row = tempGrid_1[_i];
+            var flattenedRow = [];
+            flattened.push(flattenedRow);
+            for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
+                var options = row_1[_a];
+                flattenedRow.push(options.length === 1 ? options[0] : null);
+            }
+        }
+        return flattened;
+    };
+    Puzzle.prototype.solveFrom = function (tempGrid, log) {
+        return __awaiter(this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, new Promise(function (resolve) {
+                            setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
+                                var sudokuSize, firstUnset, y, x, pos, options, flattened, solutions, currentList, cell, _i, currentList_1, option, _a, _b, _c;
+                                return __generator(this, function (_d) {
+                                    switch (_d.label) {
+                                        case 0:
+                                            sudokuSize = this.sudoku.getSize();
+                                            firstUnset = null;
+                                            for (y = 0; y < sudokuSize.height; y++) {
+                                                for (x = 0; x < sudokuSize.width; x++) {
+                                                    pos = { x: x, y: y };
+                                                    options = tempGrid[y][x];
+                                                    if (options.length === 0) {
+                                                        log("No candidates for " + x + "," + y + "\n");
+                                                        resolve([]);
+                                                        return [2];
+                                                    }
+                                                    if (!firstUnset && options.length > 2) {
+                                                        firstUnset = pos;
+                                                        break;
+                                                    }
+                                                }
+                                                if (firstUnset) {
+                                                    break;
+                                                }
+                                            }
+                                            if (!firstUnset) {
+                                                log("Reached end of dfs\n");
+                                                flattened = this.flatten(tempGrid);
+                                                if (this.isValidSolution(flattened, log)) {
+                                                    resolve([flattened]);
+                                                }
+                                                else {
+                                                    resolve([]);
+                                                }
+                                                return [2];
+                                            }
+                                            solutions = [];
+                                            currentList = tempGrid[firstUnset.y][firstUnset.x];
+                                            cell = this.sudoku.getCell(firstUnset);
+                                            _i = 0, currentList_1 = currentList;
+                                            _d.label = 1;
+                                        case 1:
+                                            if (!(_i < currentList_1.length)) return [3, 4];
+                                            option = currentList_1[_i];
+                                            log("Trying \"" + option + "\" for " + firstUnset.x + "," + firstUnset.y + "\n");
+                                            tempGrid[firstUnset.y][firstUnset.x] = [option];
+                                            cell.setValue(option);
+                                            if (!this.isValidSolution(this.flatten(tempGrid), log)) return [3, 3];
+                                            _b = (_a = solutions.push).apply;
+                                            _c = [solutions];
+                                            return [4, this.solveFrom(tempGrid, log)];
+                                        case 2:
+                                            _b.apply(_a, _c.concat([(_d.sent())]));
+                                            _d.label = 3;
+                                        case 3:
+                                            _i++;
+                                            return [3, 1];
+                                        case 4:
+                                            tempGrid[firstUnset.y][firstUnset.x] = currentList;
+                                            cell.setValue(currentList.length === 1 ? currentList[0] : null);
+                                            resolve(solutions);
+                                            return [2];
+                                    }
+                                });
+                            }); }, 0);
+                        })];
+                    case 1: return [2, _a.sent()];
+                }
+            });
+        });
+    };
+    Puzzle.prototype.isValidSolution = function (tempGrid, log) {
+        for (var _i = 0, _a = this.sudoku.getConstraints(); _i < _a.length; _i++) {
+            var constraint = _a[_i];
+            if (constraint.violates(tempGrid)) {
+                log("Violated by constraint: " + constraint.friendlyName() + "\n");
+                return false;
+            }
+        }
+        return true;
+    };
+    return Puzzle;
+}());
+
+
+;// CONCATENATED MODULE: ./ts/main.ts
+var main_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var main_generator = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+
+
+
+
+var title = "My Sudoku";
+var sudoku = Sudoku.CreateStandard();
+for (var y = 0; y < 9; y++) {
+    for (var x = 0; x < 9; x++) {
+        if (y >= 6) {
+            continue;
+        }
+        sudoku.setCell({ x: x, y: y }, new GivenCell(numerals[(x + 3 * y + Math.floor(y / 3)) % 9]));
+    }
+}
+var puzzle = new Puzzle(title, sudoku);
+window.onload = function () {
+    document.getElementById("sudoku-wrapper").appendChild(puzzle.getSudokuElement());
+    document.getElementById("solve-button").onclick = function () { return main_awaiter(void 0, void 0, void 0, function () {
+        var logElement, solutions;
+        return main_generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    logElement = document.getElementById("solve-log");
+                    logElement.innerHTML = "";
+                    return [4, puzzle.solve(function (x) {
+                        })];
+                case 1:
+                    solutions = _a.sent();
+                    console.log(solutions);
+                    puzzle.getSudoku().setValuesFromGrid(solutions);
+                    return [2];
+            }
+        });
+    }); };
+};
+
+/******/ })()
+;

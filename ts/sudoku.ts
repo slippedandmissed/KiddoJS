@@ -3,6 +3,7 @@ import { Cell } from "./cell";
 import { Serializable } from "./serializer";
 import { Position, Size } from "./tools";
 import { Constraint } from "./constraints/constraint";
+import { RowColumnRepeats } from "./constraints/rowcolumnrepeats";
 
 export class Sudoku extends Serializable {
 
@@ -58,18 +59,21 @@ export class Sudoku extends Serializable {
     public addConstraint(constraint: Constraint) {
         this.constraints.push(constraint);
         constraint.initializeContainer();
-        this.container.appendChild(constraint.getContainer());
+        const container = constraint.getContainer();
+        if (container) {
+            this.container.appendChild(constraint.getContainer());
+        }
     }
 
     static CreateStandard(major: number = 3, minor: number = 3): Sudoku {
         const cells: Cell[][] = [];
-        const boxes: Box[] = [];
+        const constraints: Constraint[] = [];
 
         const size = major * minor;
 
         for (let i = 0; i < major; i++) {
             for (let j = 0; j < major; j++) {
-                boxes.push(new Box(
+                constraints.push(new Box(
                     {
                         x: i * minor,
                         y: j * minor
@@ -81,6 +85,9 @@ export class Sudoku extends Serializable {
                 ));
             }
         }
+
+        constraints.push(new RowColumnRepeats());
+
         for (let y = 0; y < size; y++) {
             cells[y] = [];
             for (let x = 0; x < size; x++) {
@@ -93,7 +100,15 @@ export class Sudoku extends Serializable {
             }
         }
 
-        return new Sudoku(cells, boxes);
+        return new Sudoku(cells, constraints);
+    }
+
+    getSize(): Size {
+        return this.size;
+    }
+
+    getConstraints(): Constraint[] {
+        return this.constraints;
     }
 
     getContainer(): HTMLElement {
@@ -114,6 +129,24 @@ export class Sudoku extends Serializable {
 
     getCell(pos: Position) {
         return this.grid[pos.y][pos.x];
+    }
+
+    setValuesFromGrid(grid: string[][][]) {
+        for (let y=0; y<this.size.height; y++) {
+            for (let x=0; x<this.size.width; x++) {
+                const options: string[] = grid[y][x];
+                const cell = this.grid[y][x];
+                cell.clearNotes();
+                if (options.length === 1) {
+                    cell.setValue(options[0])
+                } else {
+                    cell.setValue(null);
+                    for (const note of options) {
+                        cell.addNote(note);
+                    }
+                }
+            }
+        }
     }
 
 }

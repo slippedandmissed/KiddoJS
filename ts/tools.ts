@@ -3,6 +3,7 @@ import { Cell, GivenCell } from "./cell";
 import { Sudoku } from "./sudoku";
 import { SerializableClasses } from "./serializer";
 import { Thermometer } from "./constraints/thermometer";
+import { RowColumnRepeats } from "./constraints/rowcolumnrepeats";
 
 export const numerals: string[] = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 export const classes: SerializableClasses = {
@@ -10,7 +11,8 @@ export const classes: SerializableClasses = {
     "Cell": Cell,
     "GivenCell": GivenCell,
     "Box": Box,
-    "Thermometer": Thermometer
+    "Thermometer": Thermometer,
+    "RowColumnRepeats": RowColumnRepeats
 };
 
 export interface Position {

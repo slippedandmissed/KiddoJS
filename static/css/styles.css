@@ -96,3 +96,8 @@
     stroke: black;
     fill: transparent;
 }
+
+#solve-log {
+    height: 400px;
+    overflow-y: scroll;
+}
