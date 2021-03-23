@@ -589,25 +589,6 @@ var Sudoku = (function (_super) {
     Sudoku.prototype.getCell = function (pos) {
         return this.grid[pos.y][pos.x];
     };
-    Sudoku.prototype.setValuesFromGrid = function (grid) {
-        for (var y = 0; y < this.size.height; y++) {
-            for (var x = 0; x < this.size.width; x++) {
-                var options = grid[y][x];
-                var cell = this.grid[y][x];
-                cell.clearNotes();
-                if (options.length === 1) {
-                    cell.setValue(options[0]);
-                }
-                else {
-                    cell.setValue(null);
-                    for (var _i = 0, options_1 = options; _i < options_1.length; _i++) {
-                        var note = options_1[_i];
-                        cell.addNote(note);
-                    }
-                }
-            }
-        }
-    };
     return Sudoku;
 }(Serializable));
 
@@ -748,6 +729,20 @@ var Thermometer = (function (_super) {
         return "Thermometer through " + points.join(", ");
     };
     Thermometer.prototype.violates = function (grid) {
+        var min = -Infinity;
+        for (var _i = 0, _a = this.coords; _i < _a.length; _i++) {
+            var coord = _a[_i];
+            var val = grid[coord.y][coord.x];
+            if (val) {
+                if (+val <= min) {
+                    return true;
+                }
+                min = +val;
+            }
+            else {
+                min++;
+            }
+        }
         return false;
     };
     return Thermometer;
@@ -827,11 +822,13 @@ var puzzle_spreadArray = (undefined && undefined.__spreadArray) || function (to,
 
 
 
+;
 var Puzzle = (function () {
     function Puzzle(title, sudoku, alphabet, serializer) {
         if (alphabet === void 0) { alphabet = numerals; }
         if (serializer === void 0) { serializer = null; }
         this.selected = [];
+        this.solveCancelled = false;
         this.title = title;
         this.sudoku = sudoku;
         this.alphabet = alphabet;
@@ -964,15 +961,31 @@ var Puzzle = (function () {
     Puzzle.prototype.getSudokuElement = function () {
         return this.sudoku.getContainer();
     };
-    Puzzle.prototype.solve = function (log) {
+    Puzzle.prototype.cancelSolve = function () {
+        this.solveCancelled = true;
+    };
+    Puzzle.prototype.isSolveable = function (log) {
         if (log === void 0) { log = function (_) { }; }
         return __awaiter(this, void 0, void 0, function () {
-            var tempGrid, sudokuSize, y, row, x, pos, cell, val, notes_1, y, x, allSolutions, notes, y, row, x, _i, allSolutions_1, solution, y, x, notesList, item;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4, this.solve(log, true)];
+                    case 1: return [2, !!(_a.sent())];
+                }
+            });
+        });
+    };
+    Puzzle.prototype.solve = function (log, onlyFirstSolution) {
+        if (log === void 0) { log = function (_) { }; }
+        if (onlyFirstSolution === void 0) { onlyFirstSolution = false; }
+        return __awaiter(this, void 0, void 0, function () {
+            var tempGrid, sudokuSize, y, row, x, pos, cell, val, notes_1, y, x, notes, y, row, x, allSolutions;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
+                        this.solveCancelled = false;
                         this.preSolveState = this.getState();
-                        log("Starting solve\n");
+                        log("Starting solve");
                         tempGrid = [];
                         sudokuSize = this.sudoku.getSize();
                         for (y = 0; y < sudokuSize.height; y++) {
@@ -1001,16 +1014,6 @@ var Puzzle = (function () {
                                 this.sudoku.getCell({ x: x, y: y }).clearNotes();
                             }
                         }
-                        return [4, this.solveFrom(tempGrid, log)];
-                    case 1:
-                        allSolutions = _a.sent();
-                        if (allSolutions.length === 0) {
-                            log("No solutions...");
-                            this.loadState(this.preSolveState);
-                            this.preSolveState = null;
-                            return [2, null];
-                        }
-                        log(allSolutions.length + " solutions");
                         notes = [];
                         for (y = 0; y < sudokuSize.height; y++) {
                             row = [];
@@ -1019,21 +1022,20 @@ var Puzzle = (function () {
                                 row.push([]);
                             }
                         }
-                        for (_i = 0, allSolutions_1 = allSolutions; _i < allSolutions_1.length; _i++) {
-                            solution = allSolutions_1[_i];
-                            for (y = 0; y < sudokuSize.height; y++) {
-                                for (x = 0; x < sudokuSize.width; x++) {
-                                    notesList = notes[y][x];
-                                    item = solution[y][x];
-                                    if (!notesList.includes(item)) {
-                                        notesList.push(item);
-                                    }
-                                }
-                            }
+                        return [4, this.solveFrom(tempGrid, notes, log, onlyFirstSolution)];
+                    case 1:
+                        allSolutions = _a.sent();
+                        if (allSolutions.length === 0) {
+                            log("No solutions...");
+                            this.loadState(this.preSolveState);
+                            this.pushState();
+                            this.preSolveState = null;
+                            return [2, null];
                         }
                         this.loadState(this.preSolveState);
+                        this.pushState();
                         this.preSolveState = null;
-                        return [2, notes];
+                        return [2, { solutions: allSolutions, notes: notes }];
                 }
             });
         });
@@ -1051,17 +1053,21 @@ var Puzzle = (function () {
         }
         return flattened;
     };
-    Puzzle.prototype.solveFrom = function (tempGrid, log) {
+    Puzzle.prototype.solveFrom = function (tempGrid, notes, log, onlyFirstSolution) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4, new Promise(function (resolve) {
                             setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
-                                var sudokuSize, firstUnset, y, x, pos, options, flattened, solutions, currentList, cell, _i, currentList_1, option, _a, _b, _c;
-                                return __generator(this, function (_d) {
-                                    switch (_d.label) {
+                                var sudokuSize, firstUnset, y, x, pos, options, flattened, y, x, currentNotes, option, solutions, currentList, cell, _i, currentList_1, option, s;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
                                         case 0:
+                                            if (this.solveCancelled) {
+                                                resolve([]);
+                                                return [2];
+                                            }
                                             sudokuSize = this.sudoku.getSize();
                                             firstUnset = null;
                                             for (y = 0; y < sudokuSize.height; y++) {
@@ -1069,7 +1075,7 @@ var Puzzle = (function () {
                                                     pos = { x: x, y: y };
                                                     options = tempGrid[y][x];
                                                     if (options.length === 0) {
-                                                        log("No candidates for " + x + "," + y + "\n");
+                                                        log("No candidates for " + x + "," + y);
                                                         resolve([]);
                                                         return [2];
                                                     }
@@ -1083,9 +1089,18 @@ var Puzzle = (function () {
                                                 }
                                             }
                                             if (!firstUnset) {
-                                                log("Reached end of dfs\n");
+                                                log("Reached end of dfs");
                                                 flattened = this.flatten(tempGrid);
                                                 if (this.isValidSolution(flattened, log)) {
+                                                    for (y = 0; y < tempGrid.length; y++) {
+                                                        for (x = 0; x < tempGrid[y].length; x++) {
+                                                            currentNotes = notes[y][x];
+                                                            option = tempGrid[y][x][0];
+                                                            if (!currentNotes.includes(option)) {
+                                                                currentNotes.push(option);
+                                                            }
+                                                        }
+                                                    }
                                                     resolve([flattened]);
                                                 }
                                                 else {
@@ -1097,20 +1112,25 @@ var Puzzle = (function () {
                                             currentList = tempGrid[firstUnset.y][firstUnset.x];
                                             cell = this.sudoku.getCell(firstUnset);
                                             _i = 0, currentList_1 = currentList;
-                                            _d.label = 1;
+                                            _a.label = 1;
                                         case 1:
                                             if (!(_i < currentList_1.length)) return [3, 4];
                                             option = currentList_1[_i];
-                                            log("Trying \"" + option + "\" for " + firstUnset.x + "," + firstUnset.y + "\n");
+                                            log("Trying \"" + option + "\" for " + firstUnset.x + "," + firstUnset.y);
                                             tempGrid[firstUnset.y][firstUnset.x] = [option];
                                             cell.setValue(option);
                                             if (!this.isValidSolution(this.flatten(tempGrid), log)) return [3, 3];
-                                            _b = (_a = solutions.push).apply;
-                                            _c = [solutions];
-                                            return [4, this.solveFrom(tempGrid, log)];
+                                            return [4, this.solveFrom(tempGrid, notes, log, onlyFirstSolution)];
                                         case 2:
-                                            _b.apply(_a, _c.concat([(_d.sent())]));
-                                            _d.label = 3;
+                                            s = _a.sent();
+                                            if (s.length > 0) {
+                                                if (onlyFirstSolution) {
+                                                    resolve(s);
+                                                    return [2];
+                                                }
+                                                solutions.push.apply(solutions, s);
+                                            }
+                                            _a.label = 3;
                                         case 3:
                                             _i++;
                                             return [3, 1];
@@ -1132,11 +1152,32 @@ var Puzzle = (function () {
         for (var _i = 0, _a = this.sudoku.getConstraints(); _i < _a.length; _i++) {
             var constraint = _a[_i];
             if (constraint.violates(tempGrid)) {
-                log("Violated by constraint: " + constraint.friendlyName() + "\n");
+                log("Violated by constraint: " + constraint.friendlyName());
                 return false;
             }
         }
         return true;
+    };
+    Puzzle.prototype.setValuesFromNotes = function (grid) {
+        this.pushState();
+        var sudokuSize = this.sudoku.getSize();
+        for (var y = 0; y < sudokuSize.height; y++) {
+            for (var x = 0; x < sudokuSize.width; x++) {
+                var options = grid[y][x];
+                var cell = this.sudoku.getCell({ x: x, y: y });
+                cell.clearNotes();
+                if (options.length === 1) {
+                    cell.setValue(options[0]);
+                }
+                else {
+                    cell.setValue(null);
+                    for (var _i = 0, options_1 = options; _i < options_1.length; _i++) {
+                        var note = options_1[_i];
+                        cell.addNote(note);
+                    }
+                }
+            }
+        }
     };
     return Puzzle;
 }());
@@ -1185,30 +1226,48 @@ var main_generator = (undefined && undefined.__generator) || function (thisArg, 
 
 var title = "My Sudoku";
 var sudoku = Sudoku.CreateStandard();
-for (var y = 0; y < 9; y++) {
-    for (var x = 0; x < 9; x++) {
-        if (y >= 6) {
-            continue;
-        }
-        sudoku.setCell({ x: x, y: y }, new GivenCell(numerals[(x + 3 * y + Math.floor(y / 3)) % 9]));
-    }
-}
+sudoku.setCell({ x: 2, y: 2 }, new GivenCell("5"));
+sudoku.addConstraint(new Thermometer([
+    { x: 2, y: 2 },
+    { x: 3, y: 3 },
+    { x: 4, y: 2 },
+    { x: 4, y: 1 },
+    { x: 3, y: 0 },
+]));
+sudoku.addConstraint(new Thermometer([
+    { x: 2, y: 2 },
+    { x: 1, y: 2 },
+]));
 var puzzle = new Puzzle(title, sudoku);
 window.onload = function () {
     document.getElementById("sudoku-wrapper").appendChild(puzzle.getSudokuElement());
-    document.getElementById("solve-button").onclick = function () { return main_awaiter(void 0, void 0, void 0, function () {
-        var logElement, solutions;
-        return main_generator(this, function (_a) {
-            switch (_a.label) {
+    var solveButton = document.getElementById("solve-button");
+    var cancelSolveButton = document.getElementById("cancel-solve-button");
+    var logElement = document.getElementById("solve-log");
+    cancelSolveButton.onclick = function () {
+        puzzle.cancelSolve();
+    };
+    solveButton.onclick = function () { return main_awaiter(void 0, void 0, void 0, function () {
+        var solutions, _a, _b;
+        return main_generator(this, function (_c) {
+            switch (_c.label) {
                 case 0:
-                    logElement = document.getElementById("solve-log");
+                    solveButton.disabled = true;
+                    cancelSolveButton.disabled = false;
                     logElement.innerHTML = "";
                     return [4, puzzle.solve(function (x) {
-                        })];
+                        }, true)];
                 case 1:
-                    solutions = _a.sent();
-                    console.log(solutions);
-                    puzzle.getSudoku().setValuesFromGrid(solutions);
+                    solutions = _c.sent();
+                    solveButton.disabled = false;
+                    cancelSolveButton.disabled = true;
+                    if (solutions) {
+                        puzzle.setValuesFromNotes(solutions.notes);
+                    }
+                    _b = (_a = console).log;
+                    return [4, puzzle.isSolveable()];
+                case 2:
+                    _b.apply(_a, [_c.sent()]);
                     return [2];
             }
         });

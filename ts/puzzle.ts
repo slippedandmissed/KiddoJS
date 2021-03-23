@@ -4,6 +4,11 @@ import { Serializer, state } from "./serializer";
 import { Sudoku } from "./sudoku";
 import { classes, numerals, Position } from "./tools";
 
+export interface Solutions {
+    solutions: string[][][],
+    notes: string[][][]
+};
+
 export class Puzzle {
 
     private sudoku: Sudoku;
@@ -13,6 +18,7 @@ export class Puzzle {
     private serializer: Serializer;
     private historyStack: HistoryStack<state>;
     private preSolveState: state;
+    private solveCancelled: boolean = false;
 
     constructor(title: string, sudoku: Sudoku, alphabet: string[] = numerals, serializer: Serializer = null) {
         this.title = title;
@@ -153,9 +159,18 @@ export class Puzzle {
         return this.sudoku.getContainer();
     }
 
-    async solve(log: ((x: string) => any) = (_) => {}): Promise<string[][][]> {
+    cancelSolve(): void {
+        this.solveCancelled = true;
+    }
+
+    async isSolveable(log: ((x: string) => any) = (_) => {}): Promise<boolean> {
+        return !!(await this.solve(log, true));
+    }
+
+    async solve(log: ((x: string) => any) = (_) => { }, onlyFirstSolution: boolean = false): Promise<Solutions> {
+        this.solveCancelled = false;
         this.preSolveState = this.getState();
-        log("Starting solve\n");
+        log("Starting solve");
         const tempGrid: string[][][] = [];
         const sudokuSize = this.sudoku.getSize();
         for (let y = 0; y < sudokuSize.height; y++) {
@@ -178,21 +193,12 @@ export class Puzzle {
             }
         }
 
-        for (let y=0; y<sudokuSize.height; y++) {
-            for (let x=0; x<sudokuSize.width; x++) {
-                this.sudoku.getCell({x,y}).clearNotes();
+        for (let y = 0; y < sudokuSize.height; y++) {
+            for (let x = 0; x < sudokuSize.width; x++) {
+                this.sudoku.getCell({ x, y }).clearNotes();
             }
         }
 
-        const allSolutions = await this.solveFrom(tempGrid, log);
-        if (allSolutions.length === 0) {
-            log("No solutions...");
-            this.loadState(this.preSolveState);
-            this.preSolveState = null;
-            return null;
-        }
-
-        log(`${allSolutions.length} solutions`);
         const notes: string[][][] = [];
         for (let y = 0; y < sudokuSize.height; y++) {
             const row: string[][] = [];
@@ -201,20 +207,20 @@ export class Puzzle {
                 row.push([]);
             }
         }
-        for (const solution of allSolutions) {
-            for (let y = 0; y < sudokuSize.height; y++) {
-                for (let x = 0; x < sudokuSize.width; x++) {
-                    const notesList = notes[y][x];
-                    const item = solution[y][x];
-                    if (!notesList.includes(item)) {
-                        notesList.push(item);
-                    }
-                }
-            }
+
+        const allSolutions = await this.solveFrom(tempGrid, notes, log, onlyFirstSolution);
+        if (allSolutions.length === 0) {
+            log("No solutions...");
+            this.loadState(this.preSolveState);
+            this.pushState();
+            this.preSolveState = null;
+            return null;
         }
+
         this.loadState(this.preSolveState);
+        this.pushState();
         this.preSolveState = null;
-        return notes;
+        return {solutions: allSolutions, notes};
     }
 
     private flatten(tempGrid: string[][][]): string[][] {
@@ -223,15 +229,19 @@ export class Puzzle {
             const flattenedRow: string[] = [];
             flattened.push(flattenedRow);
             for (const options of row) {
-                flattenedRow.push(options.length === 1 ? options[0]: null);
+                flattenedRow.push(options.length === 1 ? options[0] : null);
             }
         }
         return flattened;
     }
 
-    private async solveFrom(tempGrid: string[][][], log: ((x: string) => any)): Promise<string[][][]> {
+    private async solveFrom(tempGrid: string[][][], notes: string[][][], log: ((x: string) => any), onlyFirstSolution: boolean): Promise<string[][][]> {
         return await new Promise((resolve) => {
             setTimeout(async () => {
+                if (this.solveCancelled) {
+                    resolve([]);
+                    return;
+                }
                 const sudokuSize = this.sudoku.getSize();
 
                 let firstUnset: Position = null;
@@ -241,7 +251,7 @@ export class Puzzle {
                         const pos = { x, y };
                         const options = tempGrid[y][x];
                         if (options.length === 0) {
-                            log(`No candidates for ${x},${y}\n`);
+                            log(`No candidates for ${x},${y}`);
                             resolve([]);
                             return;
                         }
@@ -256,12 +266,23 @@ export class Puzzle {
                 }
 
                 if (!firstUnset) {
-                    log("Reached end of dfs\n");
+                    log("Reached end of dfs");
                     const flattened = this.flatten(tempGrid);
                     if (this.isValidSolution(flattened, log)) {
+
+                        for (let y = 0; y < tempGrid.length; y++) {
+                            for (let x = 0; x < tempGrid[y].length; x++) {
+                                const currentNotes = notes[y][x];
+                                const option = tempGrid[y][x][0];
+                                if (!currentNotes.includes(option)) {
+                                    currentNotes.push(option);
+                                }
+
+                            }
+                        }
                         resolve([flattened]);
                     } else {
-                        resolve ([]);
+                        resolve([]);
                     }
                     return;
                 }
@@ -270,15 +291,23 @@ export class Puzzle {
                 const currentList = tempGrid[firstUnset.y][firstUnset.x];
                 const cell = this.sudoku.getCell(firstUnset);
                 for (const option of currentList) {
-                    log(`Trying "${option}" for ${firstUnset.x},${firstUnset.y}\n`);
-                    tempGrid[firstUnset.y][firstUnset.x] = [option];
-                    cell.setValue(option);
-                    if (this.isValidSolution(this.flatten(tempGrid), log)) {
-                        solutions.push(...(await this.solveFrom(tempGrid, log)));
-                    }
+                        log(`Trying "${option}" for ${firstUnset.x},${firstUnset.y}`);
+                        tempGrid[firstUnset.y][firstUnset.x] = [option];
+                        cell.setValue(option);
+                        if (this.isValidSolution(this.flatten(tempGrid), log)) {
+                            const s = await this.solveFrom(tempGrid, notes, log, onlyFirstSolution);
+                            if (s.length > 0) {
+                                if (onlyFirstSolution) {
+                                    resolve(s);
+                                    return;
+                                }
+                                solutions.push(...s);
+                            }
+                        }
+                    
                 }
                 tempGrid[firstUnset.y][firstUnset.x] = currentList;
-                cell.setValue(currentList.length === 1 ? currentList[0]: null);
+                cell.setValue(currentList.length === 1 ? currentList[0] : null);
                 resolve(solutions);
             }, 0);
         });
@@ -287,10 +316,31 @@ export class Puzzle {
     private isValidSolution(tempGrid: string[][], log: (x: string) => any): boolean {
         for (const constraint of this.sudoku.getConstraints()) {
             if (constraint.violates(tempGrid)) {
-                log(`Violated by constraint: ${constraint.friendlyName()}\n`)
+                log(`Violated by constraint: ${constraint.friendlyName()}`)
                 return false;
             }
         }
         return true;
     }
+
+    setValuesFromNotes(grid: string[][][]): void {
+        this.pushState();
+        const sudokuSize = this.sudoku.getSize();
+        for (let y=0; y<sudokuSize.height; y++) {
+            for (let x=0; x<sudokuSize.width; x++) {
+                const options: string[] = grid[y][x];
+                const cell = this.sudoku.getCell({x,y});
+                cell.clearNotes();
+                if (options.length === 1) {
+                    cell.setValue(options[0])
+                } else {
+                    cell.setValue(null);
+                    for (const note of options) {
+                        cell.addNote(note);
+                    }
+                }
+            }
+        }
+    }
+
 }

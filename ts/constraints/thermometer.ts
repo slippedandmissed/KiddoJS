@@ -140,6 +140,18 @@ export class Thermometer extends Constraint {
     }
 
     violates(grid: string[][]) {
+        let min = -Infinity;
+        for (const coord of this.coords) {
+            const val = grid[coord.y][coord.x];
+            if (val) {
+                if (+val <= min) {
+                    return true;
+                }
+                min = +val;
+            } else {
+                min++;
+            }
+        }
         return false;
     }
 

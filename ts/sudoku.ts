@@ -127,26 +127,7 @@ export class Sudoku extends Serializable {
         this.container.appendChild(container);
     }
 
-    getCell(pos: Position) {
+    getCell(pos: Position): Cell {
         return this.grid[pos.y][pos.x];
     }
-
-    setValuesFromGrid(grid: string[][][]) {
-        for (let y=0; y<this.size.height; y++) {
-            for (let x=0; x<this.size.width; x++) {
-                const options: string[] = grid[y][x];
-                const cell = this.grid[y][x];
-                cell.clearNotes();
-                if (options.length === 1) {
-                    cell.setValue(options[0])
-                } else {
-                    cell.setValue(null);
-                    for (const note of options) {
-                        cell.addNote(note);
-                    }
-                }
-            }
-        }
-    }
-
 }
