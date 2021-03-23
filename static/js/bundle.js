@@ -1040,19 +1040,6 @@ var Puzzle = (function () {
             });
         });
     };
-    Puzzle.prototype.flatten = function (tempGrid) {
-        var flattened = [];
-        for (var _i = 0, tempGrid_1 = tempGrid; _i < tempGrid_1.length; _i++) {
-            var row = tempGrid_1[_i];
-            var flattenedRow = [];
-            flattened.push(flattenedRow);
-            for (var _a = 0, row_1 = row; _a < row_1.length; _a++) {
-                var options = row_1[_a];
-                flattenedRow.push(options.length === 1 ? options[0] : null);
-            }
-        }
-        return flattened;
-    };
     Puzzle.prototype.solveFrom = function (tempGrid, notes, log, onlyFirstSolution) {
         return __awaiter(this, void 0, void 0, function () {
             var _this = this;
@@ -1060,38 +1047,63 @@ var Puzzle = (function () {
                 switch (_a.label) {
                     case 0: return [4, new Promise(function (resolve) {
                             setTimeout(function () { return __awaiter(_this, void 0, void 0, function () {
-                                var sudokuSize, firstUnset, y, x, pos, options, flattened, y, x, currentNotes, option, solutions, currentList, cell, _i, currentList_1, option, s;
-                                return __generator(this, function (_a) {
-                                    switch (_a.label) {
+                                var sudokuSize, mostConstrained, mostConstrainedOptionCount, knowns, y, row, x, options, y, x, options, i, y, x, currentNotes, option, solutions, currentList, cell, _i, currentList_1, option, copyTempGrid, _a, tempGrid_1, row, copyRow, _b, row_1, cell_1, s;
+                                return __generator(this, function (_c) {
+                                    switch (_c.label) {
                                         case 0:
                                             if (this.solveCancelled) {
                                                 resolve([]);
                                                 return [2];
                                             }
                                             sudokuSize = this.sudoku.getSize();
-                                            firstUnset = null;
+                                            mostConstrained = null;
+                                            mostConstrainedOptionCount = Infinity;
+                                            knowns = [];
                                             for (y = 0; y < sudokuSize.height; y++) {
+                                                row = [];
+                                                knowns.push(row);
                                                 for (x = 0; x < sudokuSize.width; x++) {
-                                                    pos = { x: x, y: y };
                                                     options = tempGrid[y][x];
-                                                    if (options.length === 0) {
-                                                        log("No candidates for " + x + "," + y);
-                                                        resolve([]);
-                                                        return [2];
+                                                    if (options.length === 1) {
+                                                        row.push(options[0]);
+                                                        this.sudoku.getCell({ x: x, y: y }).setValue(options[0]);
                                                     }
-                                                    if (!firstUnset && options.length > 2) {
-                                                        firstUnset = pos;
-                                                        break;
+                                                    else {
+                                                        row.push(null);
                                                     }
-                                                }
-                                                if (firstUnset) {
-                                                    break;
                                                 }
                                             }
-                                            if (!firstUnset) {
+                                            for (y = 0; y < sudokuSize.height; y++) {
+                                                for (x = 0; x < sudokuSize.width; x++) {
+                                                    if (!knowns[y][x]) {
+                                                        options = tempGrid[y][x];
+                                                        for (i = options.length - 1; i >= 0; i--) {
+                                                            knowns[y][x] = options[i];
+                                                            if (!this.isValidSolution(knowns, log)) {
+                                                                options.splice(i, 1);
+                                                            }
+                                                        }
+                                                        if (options.length === 0) {
+                                                            log("No candidates for " + x + "," + y);
+                                                            resolve([]);
+                                                            return [2];
+                                                        }
+                                                        else if (options.length === 1) {
+                                                            knowns[y][x] = options[0];
+                                                        }
+                                                        else {
+                                                            knowns[y][x] = null;
+                                                            if (options.length < mostConstrainedOptionCount) {
+                                                                mostConstrained = { x: x, y: y };
+                                                                mostConstrainedOptionCount = options.length;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            if (!mostConstrained) {
                                                 log("Reached end of dfs");
-                                                flattened = this.flatten(tempGrid);
-                                                if (this.isValidSolution(flattened, log)) {
+                                                if (this.isValidSolution(knowns, log)) {
                                                     for (y = 0; y < tempGrid.length; y++) {
                                                         for (x = 0; x < tempGrid[y].length; x++) {
                                                             currentNotes = notes[y][x];
@@ -1101,7 +1113,7 @@ var Puzzle = (function () {
                                                             }
                                                         }
                                                     }
-                                                    resolve([flattened]);
+                                                    resolve([knowns]);
                                                 }
                                                 else {
                                                     resolve([]);
@@ -1109,20 +1121,30 @@ var Puzzle = (function () {
                                                 return [2];
                                             }
                                             solutions = [];
-                                            currentList = tempGrid[firstUnset.y][firstUnset.x];
-                                            cell = this.sudoku.getCell(firstUnset);
+                                            currentList = tempGrid[mostConstrained.y][mostConstrained.x];
+                                            cell = this.sudoku.getCell(mostConstrained);
                                             _i = 0, currentList_1 = currentList;
-                                            _a.label = 1;
+                                            _c.label = 1;
                                         case 1:
                                             if (!(_i < currentList_1.length)) return [3, 4];
                                             option = currentList_1[_i];
-                                            log("Trying \"" + option + "\" for " + firstUnset.x + "," + firstUnset.y);
-                                            tempGrid[firstUnset.y][firstUnset.x] = [option];
+                                            log("Trying \"" + option + "\" for " + mostConstrained.x + "," + mostConstrained.y);
+                                            tempGrid[mostConstrained.y][mostConstrained.x] = [option];
+                                            knowns[mostConstrained.y][mostConstrained.x] = option;
                                             cell.setValue(option);
-                                            if (!this.isValidSolution(this.flatten(tempGrid), log)) return [3, 3];
-                                            return [4, this.solveFrom(tempGrid, notes, log, onlyFirstSolution)];
+                                            copyTempGrid = [];
+                                            for (_a = 0, tempGrid_1 = tempGrid; _a < tempGrid_1.length; _a++) {
+                                                row = tempGrid_1[_a];
+                                                copyRow = [];
+                                                copyTempGrid.push(copyRow);
+                                                for (_b = 0, row_1 = row; _b < row_1.length; _b++) {
+                                                    cell_1 = row_1[_b];
+                                                    copyRow.push(puzzle_spreadArray([], cell_1));
+                                                }
+                                            }
+                                            return [4, this.solveFrom(copyTempGrid, notes, log, onlyFirstSolution)];
                                         case 2:
-                                            s = _a.sent();
+                                            s = _c.sent();
                                             if (s.length > 0) {
                                                 if (onlyFirstSolution) {
                                                     resolve(s);
@@ -1130,12 +1152,13 @@ var Puzzle = (function () {
                                                 }
                                                 solutions.push.apply(solutions, s);
                                             }
-                                            _a.label = 3;
+                                            _c.label = 3;
                                         case 3:
                                             _i++;
                                             return [3, 1];
                                         case 4:
-                                            tempGrid[firstUnset.y][firstUnset.x] = currentList;
+                                            knowns[mostConstrained.y][mostConstrained.x] = null;
+                                            tempGrid[mostConstrained.y][mostConstrained.x] = currentList;
                                             cell.setValue(currentList.length === 1 ? currentList[0] : null);
                                             resolve(solutions);
                                             return [2];

@@ -96,6 +96,9 @@ export class Puzzle {
     private onKeyDown(event: KeyboardEvent) {
         // FIXME
         // Find a way to do this without "event.keyCode" as it is deprecated.
+
+        // FIXME
+        // Use CMD instead of CTRL on mac
         if (this.preSolveState) {
             return;
         }
@@ -164,7 +167,7 @@ export class Puzzle {
         this.solveCancelled = true;
     }
 
-    async isBroken(log: ((x: string) => any) = (_) => {}): Promise<boolean> {
+    async isBroken(log: ((x: string) => any) = (_) => { }): Promise<boolean> {
         return !(await this.solve(log, true));
     }
 
@@ -215,25 +218,13 @@ export class Puzzle {
             this.loadState(this.preSolveState);
             this.pushState();
             this.preSolveState = null;
-            return {solutions: [], notes: null, cancelled: this.solveCancelled};
+            return { solutions: [], notes: null, cancelled: this.solveCancelled };
         }
 
         this.loadState(this.preSolveState);
         this.pushState();
         this.preSolveState = null;
-        return {solutions: allSolutions, notes, cancelled: this.solveCancelled};
-    }
-
-    private flatten(tempGrid: string[][][]): string[][] {
-        const flattened: string[][] = [];
-        for (const row of tempGrid) {
-            const flattenedRow: string[] = [];
-            flattened.push(flattenedRow);
-            for (const options of row) {
-                flattenedRow.push(options.length === 1 ? options[0] : null);
-            }
-        }
-        return flattened;
+        return { solutions: allSolutions, notes, cancelled: this.solveCancelled };
     }
 
     private async solveFrom(tempGrid: string[][][], notes: string[][][], log: ((x: string) => any), onlyFirstSolution: boolean): Promise<string[][][]> {
@@ -245,31 +236,56 @@ export class Puzzle {
                 }
                 const sudokuSize = this.sudoku.getSize();
 
-                let firstUnset: Position = null;
+                let mostConstrained: Position = null;
+                let mostConstrainedOptionCount: number = Infinity;
 
+                const knowns: string[][] = [];
                 for (let y = 0; y < sudokuSize.height; y++) {
+                    const row: string[] = [];
+                    knowns.push(row);
                     for (let x = 0; x < sudokuSize.width; x++) {
-                        const pos = { x, y };
                         const options = tempGrid[y][x];
-                        if (options.length === 0) {
-                            log(`No candidates for ${x},${y}`);
-                            resolve([]);
-                            return;
+                        if (options.length === 1) {
+                            row.push(options[0]);
+                            this.sudoku.getCell({ x, y }).setValue(options[0]);
+                        } else {
+                            row.push(null);
                         }
-                        if (!firstUnset && options.length > 2) {
-                            firstUnset = pos;
-                            break;
-                        }
-                    }
-                    if (firstUnset) {
-                        break
                     }
                 }
 
-                if (!firstUnset) {
+
+                for (let y = 0; y < sudokuSize.height; y++) {
+                    for (let x = 0; x < sudokuSize.width; x++) {
+                        if (!knowns[y][x]) {
+                            const options = tempGrid[y][x];
+                            for (let i = options.length - 1; i >= 0; i--) {
+                                knowns[y][x] = options[i];
+                                if (!this.isValidSolution(knowns, log)) {
+                                    options.splice(i, 1);
+                                }
+                            }
+                            if (options.length === 0) {
+                                log(`No candidates for ${x},${y}`);
+                                resolve([]);
+                                return;
+                            } else if (options.length === 1) {
+                                knowns[y][x] = options[0];
+                            } else {
+                                knowns[y][x] = null;
+                                if (options.length < mostConstrainedOptionCount) {
+                                    mostConstrained = { x, y };
+                                    mostConstrainedOptionCount = options.length;
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                if (!mostConstrained) {
                     log("Reached end of dfs");
-                    const flattened = this.flatten(tempGrid);
-                    if (this.isValidSolution(flattened, log)) {
+                    if (this.isValidSolution(knowns, log)) {
 
                         for (let y = 0; y < tempGrid.length; y++) {
                             for (let x = 0; x < tempGrid[y].length; x++) {
@@ -281,33 +297,42 @@ export class Puzzle {
 
                             }
                         }
-                        resolve([flattened]);
+                        resolve([knowns]);
                     } else {
                         resolve([]);
                     }
                     return;
                 }
 
+
                 const solutions: string[][][] = [];
-                const currentList = tempGrid[firstUnset.y][firstUnset.x];
-                const cell = this.sudoku.getCell(firstUnset);
+                const currentList = tempGrid[mostConstrained.y][mostConstrained.x];
+                const cell = this.sudoku.getCell(mostConstrained);
                 for (const option of currentList) {
-                        log(`Trying "${option}" for ${firstUnset.x},${firstUnset.y}`);
-                        tempGrid[firstUnset.y][firstUnset.x] = [option];
-                        cell.setValue(option);
-                        if (this.isValidSolution(this.flatten(tempGrid), log)) {
-                            const s = await this.solveFrom(tempGrid, notes, log, onlyFirstSolution);
-                            if (s.length > 0) {
-                                if (onlyFirstSolution) {
-                                    resolve(s);
-                                    return;
-                                }
-                                solutions.push(...s);
-                            }
+                    log(`Trying "${option}" for ${mostConstrained.x},${mostConstrained.y}`);
+                    tempGrid[mostConstrained.y][mostConstrained.x] = [option];
+                    knowns[mostConstrained.y][mostConstrained.x] = option;
+                    cell.setValue(option);
+                    const copyTempGrid: string[][][] = [];
+                    for (const row of tempGrid) {
+                        const copyRow: string[][] = [];
+                        copyTempGrid.push(copyRow);
+                        for (const cell of row) {
+                            copyRow.push([...cell]);
                         }
-                    
+                    }
+                    const s = await this.solveFrom(copyTempGrid, notes, log, onlyFirstSolution);
+                    if (s.length > 0) {
+                        if (onlyFirstSolution) {
+                            resolve(s);
+                            return;
+                        }
+                        solutions.push(...s);
+                    }
                 }
-                tempGrid[firstUnset.y][firstUnset.x] = currentList;
+                knowns[mostConstrained.y][mostConstrained.x] = null;
+
+                tempGrid[mostConstrained.y][mostConstrained.x] = currentList;
                 cell.setValue(currentList.length === 1 ? currentList[0] : null);
                 resolve(solutions);
             }, 0);
@@ -327,10 +352,10 @@ export class Puzzle {
     setValuesFromNotes(grid: string[][][]): void {
         this.pushState();
         const sudokuSize = this.sudoku.getSize();
-        for (let y=0; y<sudokuSize.height; y++) {
-            for (let x=0; x<sudokuSize.width; x++) {
+        for (let y = 0; y < sudokuSize.height; y++) {
+            for (let x = 0; x < sudokuSize.width; x++) {
                 const options: string[] = grid[y][x];
-                const cell = this.sudoku.getCell({x,y});
+                const cell = this.sudoku.getCell({ x, y });
                 cell.clearNotes();
                 if (options.length === 1) {
                     cell.setValue(options[0])
